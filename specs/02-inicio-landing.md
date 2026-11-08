@@ -1,6 +1,6 @@
 # SPEC 02 — Pantalla Inicio (landing) en la navegación
 
-**Estado:** Approved
+**Estado:** Implemented
 **Fecha:** 2026-11-08
 **Depende de:** SPEC 01 (nav, layout, `lib/games.ts`, `globals.css`)
 **Fuente de diseño:** `references/templates/home-about/home.jsx` y `nav.jsx`
