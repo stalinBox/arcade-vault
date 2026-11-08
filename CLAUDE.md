@@ -18,6 +18,9 @@ There is no test runner configured. No test command exists to run a single test.
 - `AGENTS.md` contains a `BEGIN/END:nextjs-agent-rules` block that `next dev` rewrites. Keep it intact.
 - `next-env.d.ts` is generated and git-ignored; do not edit it.
 
+## Skills
+Usa tiempre /frontend-desing para diseñar una interfaz de usuario.
+
 ## Architecture
 
 Current state: early scaffold. The App Router lives in `app/` (`layout.tsx` root layout with Geist fonts and Tailwind v4 via `globals.css`; `page.tsx` is still the stock Create Next App home page). The `@/*` path alias maps to the repo root. There is no data layer, auth, API routes, or game logic yet.
