@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-type Section = "biblioteca" | "salon" | "auth";
+type Section = "inicio" | "biblioteca" | "salon" | "auth";
 
 function sectionOf(pathname: string): Section | null {
-  if (pathname === "/" || pathname.startsWith("/juego/") || pathname.startsWith("/jugar/")) return "biblioteca";
+  if (pathname === "/inicio") return "inicio";
+  if (pathname === "/" ||pathname.startsWith("/juego/") || pathname.startsWith("/jugar/")) return "biblioteca";
   if (pathname === "/salon") return "salon";
   if (pathname === "/auth") return "auth";
   return null;
@@ -22,13 +23,14 @@ export function Nav() {
   return (
     <>
       <nav className="av-nav">
-        <Link href="/" className="logo" onClick={close}>
+        <Link href="/inicio" className="logo" onClick={close}>
           <div className="logo-mark"></div>
           <div className="logo-text neon-cyan">
             ARCADE <span className="neon-magenta">VAULT</span>
           </div>
         </Link>
         <div className="links">
+          <Link href="/inicio" className={active("inicio")}>Inicio</Link>
           <Link href="/" className={active("biblioteca")}>Biblioteca</Link>
           <Link href="/salon" className={active("salon")}>Salón de la Fama</Link>
         </div>
@@ -52,6 +54,7 @@ export function Nav() {
       <div className={"av-mobile-backdrop" + (open ? " open" : "")} onClick={close}></div>
       <aside id="av-mobile-panel" className={"av-mobile-panel" + (open ? " open" : "")} inert={!open}>
         <div className="pixel neon-cyan" style={{ fontSize: 11, marginBottom: 16 }}>MENÚ</div>
+        <Link href="/inicio" className={active("inicio")} onClick={close}>Inicio</Link>
         <Link href="/" className={active("biblioteca")} onClick={close}>Biblioteca</Link>
         <Link href="/salon" className={active("salon")} onClick={close}>Salón de la Fama</Link>
         <Link href="/auth" className={active("auth")} onClick={close}>Iniciar Sesión</Link>
