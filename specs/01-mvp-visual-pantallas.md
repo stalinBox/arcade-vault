@@ -1,6 +1,6 @@
 # SPEC 01 — MVP visual de Arcade Vault (pantallas sin juego)
 
-**Estado:** Aprobado
+**Estado:** Implemented
 **Fecha:** 2026-11-08
 **Depende de:** ninguna (primera spec)
 **Fuente de diseño:** `references/templates/` (5 pantallas + nav + footer, React UMD)
@@ -98,23 +98,23 @@ Cada paso deja la app compilando (`npm run build`).
 
 ## 4. Criterios de aceptación
 
-- [ ] `npm run build` termina sin errores.
-- [ ] `npm run lint` termina sin errores nuevos.
-- [ ] `/` muestra las 8 tarjetas de `GAMES`.
-- [ ] Escribir en el buscador filtra tarjetas por título o `short` (sin distinguir mayúsculas).
-- [ ] Seleccionar una categoría distinta de `TODOS` muestra solo juegos de esa categoría.
-- [ ] Click en una tarjeta navega a `/juego/[id]` con URL real (sin `#`).
-- [ ] `/juego/bloque-buster` muestra título, descripción larga y tabla de 10 filas.
-- [ ] `/juego/no-existe` responde 404 de Next.
-- [ ] `/jugar/caida` muestra el marco CRT con HUD fijo y no cambia ningún valor tras 5 segundos.
-- [ ] `/jugar/no-existe` responde 404.
-- [ ] `/auth`: los tabs alternan entre INICIAR SESIÓN y CREAR CUENTA; el campo correo aparece solo en CREAR CUENTA.
-- [ ] `/auth`: enviar el formulario no cambia la URL ni guarda nada en `localStorage`.
-- [ ] `/salon`: cambiar de tab cambia la tabla y el título del juego.
-- [ ] Nav en todas las rutas muestra "Iniciar Sesión" y el enlace activo corresponde a la ruta.
-- [ ] En ancho 390px: menú hamburguesa abre y cierra el panel; no hay scroll horizontal en ninguna ruta.
-- [ ] Ninguna ruta lanza errores en consola del navegador.
-- [ ] No existe ningún `setInterval` ni lógica de puntaje en el código nuevo (`grep -r setInterval app components lib` no devuelve resultados).
+- [X] `npm run build` termina sin errores.
+- [X] `npm run lint` termina sin errores nuevos.
+- [X] `/` muestra las 8 tarjetas de `GAMES`.
+- [X] Escribir en el buscador filtra tarjetas por título o `short` (sin distinguir mayúsculas).
+- [X] Seleccionar una categoría distinta de `TODOS` muestra solo juegos de esa categoría.
+- [X] Click en una tarjeta navega a `/juego/[id]` con URL real (sin `#`).
+- [X] `/juego/bloque-buster` muestra título, descripción larga y tabla de 10 filas.
+- [X] `/juego/no-existe` responde 404 de Next.
+- [X] `/jugar/caida` muestra el marco CRT con HUD fijo y no cambia ningún valor tras 5 segundos.
+- [X] `/jugar/no-existe` responde 404.
+- [X] `/auth`: los tabs alternan entre INICIAR SESIÓN y CREAR CUENTA; el campo correo aparece solo en CREAR CUENTA.
+- [X] `/auth`: enviar el formulario no cambia la URL ni guarda nada en `localStorage`.
+- [X] `/salon`: cambiar de tab cambia la tabla y el título del juego.
+- [X] Nav en todas las rutas muestra "Iniciar Sesión" y el enlace activo corresponde a la ruta.
+- [X] En ancho 390px: menú hamburguesa abre y cierra el panel; no hay scroll horizontal en ninguna ruta.
+- [X] Ninguna ruta lanza errores en consola del navegador.
+- [X] No existe ningún `setInterval` ni lógica de puntaje en el código nuevo (`grep -r setInterval app components lib` no devuelve resultados).
 
 ---
 
