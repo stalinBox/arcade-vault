@@ -8,7 +8,7 @@ type Section = "inicio" | "biblioteca" | "salon" | "auth";
 
 function sectionOf(pathname: string): Section | null {
   if (pathname === "/inicio") return "inicio";
-  if (pathname === "/" ||pathname.startsWith("/juego/") || pathname.startsWith("/jugar/")) return "biblioteca";
+  if (pathname === "/biblioteca" || pathname.startsWith("/juego/") || pathname.startsWith("/jugar/")) return "biblioteca";
   if (pathname === "/salon") return "salon";
   if (pathname === "/auth") return "auth";
   return null;
@@ -31,7 +31,7 @@ export function Nav() {
         </Link>
         <div className="links">
           <Link href="/inicio" className={active("inicio")}>Inicio</Link>
-          <Link href="/" className={active("biblioteca")}>Biblioteca</Link>
+          <Link href="/biblioteca" className={active("biblioteca")}>Biblioteca</Link>
           <Link href="/salon" className={active("salon")}>Salón de la Fama</Link>
         </div>
         <div className="spacer"></div>
@@ -55,7 +55,7 @@ export function Nav() {
       <aside id="av-mobile-panel" className={"av-mobile-panel" + (open ? " open" : "")} inert={!open}>
         <div className="pixel neon-cyan" style={{ fontSize: 11, marginBottom: 16 }}>MENÚ</div>
         <Link href="/inicio" className={active("inicio")} onClick={close}>Inicio</Link>
-        <Link href="/" className={active("biblioteca")} onClick={close}>Biblioteca</Link>
+        <Link href="/biblioteca" className={active("biblioteca")} onClick={close}>Biblioteca</Link>
         <Link href="/salon" className={active("salon")} onClick={close}>Salón de la Fama</Link>
         <Link href="/auth" className={active("auth")} onClick={close}>Iniciar Sesión</Link>
         <div style={{ flex: 1 }}></div>

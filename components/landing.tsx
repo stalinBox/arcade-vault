@@ -204,7 +204,7 @@ export function Landing() {
             Sin descargas. Sin costo. Solo diversión.
           </p>
           <div className="home-ctas">
-            <Link href="/" className="btn xl pulse">▶  EXPLORAR JUEGOS</Link>
+            <Link href="/biblioteca" className="btn xl pulse">▶  EXPLORAR JUEGOS</Link>
             <Link href="/auth" className="btn xl magenta">✦  CREAR CUENTA</Link>
           </div>
           <div className="hero-scroll" aria-hidden="true">
@@ -245,7 +245,7 @@ export function Landing() {
           ))}
         </div>
         <div style={{ textAlign: "center", marginTop: 24 }}>
-          <Link href="/" className="btn lg">VER TODOS LOS JUEGOS →</Link>
+          <Link href="/biblioteca" className="btn lg">VER TODOS LOS JUEGOS →</Link>
         </div>
       </section>
 
@@ -348,7 +348,7 @@ export function Landing() {
       {/* FINAL CTA */}
       <section className="home-final reveal">
         <h2 className="final-title pixel">¿LISTO PARA JUGAR?</h2>
-        <Link href="/" className="btn xl pulse final-cta">INSERTAR MONEDA →</Link>
+        <Link href="/biblioteca" className="btn xl pulse final-cta">INSERTAR MONEDA →</Link>
         <div className="final-tag">Gratis. Sin registro obligatorio. Empieza en segundos.</div>
       </section>
     </div>
