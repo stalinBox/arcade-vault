@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-type Section = "inicio" | "biblioteca" | "salon" | "auth";
+type Section = "inicio" | "biblioteca" | "salon" | "acerca" | "auth";
 
 function sectionOf(pathname: string): Section | null {
   if (pathname === "/inicio") return "inicio";
   if (pathname === "/biblioteca" || pathname.startsWith("/juego/") || pathname.startsWith("/jugar/")) return "biblioteca";
   if (pathname === "/salon") return "salon";
+  if (pathname === "/acerca") return "acerca";
   if (pathname === "/auth") return "auth";
   return null;
 }
@@ -33,6 +34,7 @@ export function Nav() {
           <Link href="/inicio" className={active("inicio")}>Inicio</Link>
           <Link href="/biblioteca" className={active("biblioteca")}>Biblioteca</Link>
           <Link href="/salon" className={active("salon")}>Salón de la Fama</Link>
+          <Link href="/acerca" className={active("acerca")}>Acerca de</Link>
         </div>
         <div className="spacer"></div>
         <div className="coin-counter">
@@ -57,6 +59,7 @@ export function Nav() {
         <Link href="/inicio" className={active("inicio")} onClick={close}>Inicio</Link>
         <Link href="/biblioteca" className={active("biblioteca")} onClick={close}>Biblioteca</Link>
         <Link href="/salon" className={active("salon")} onClick={close}>Salón de la Fama</Link>
+        <Link href="/acerca" className={active("acerca")} onClick={close}>Acerca de</Link>
         <Link href="/auth" className={active("auth")} onClick={close}>Iniciar Sesión</Link>
         <div style={{ flex: 1 }}></div>
         <div className="pixel" style={{ fontSize: 9, color: "var(--ink-faint)", letterSpacing: "0.16em" }}>

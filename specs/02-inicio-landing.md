@@ -60,22 +60,22 @@ Cada paso deja la app compilando (`npm run build`).
 
 ## 4. Criterios de aceptación
 
-- [ ] `npm run build` termina sin errores.
-- [ ] `npm run lint` termina sin errores nuevos.
-- [ ] Nav de escritorio: los enlaces están en orden "Inicio", "Biblioteca", "Salón de la Fama".
-- [ ] Menú móvil (390px): "Inicio" es el primer enlace del panel y abre `/inicio`.
-- [ ] Click en "Inicio" navega a `/inicio`. En esa ruta solo "Inicio" tiene clase `active`.
-- [ ] Click en el logo navega a `/inicio`.
-- [ ] `/` sigue mostrando la biblioteca con las 8 tarjetas de `GAMES`, sin cambios.
-- [ ] `/inicio` muestra, en orden: hero con "EL ARCADE / CLÁSICO ESTÁ / DE VUELTA", "¿POR QUÉ ARCADE VAULT?" con 4 tarjetas, "JUEGOS DISPONIBLES AHORA" con 6 mini-tarjetas, stats, "ACTIVIDAD EN VIVO", "PRECIOS" con FAQ de 3 ítems, "¿LISTO PARA JUGAR?".
-- [ ] "EXPLORAR JUEGOS", "VER TODOS LOS JUEGOS" e "INSERTAR MONEDA" llevan a `/`.
-- [ ] "CREAR CUENTA" y "EMPEZAR GRATIS" llevan a `/auth`.
-- [ ] "VER SALÓN" lleva a `/salon`.
-- [ ] Click en una mini-tarjeta lleva a `/juego/[id]` con el id de ese juego.
-- [ ] Al hacer scroll, cada `.reveal` recibe la clase `in` al entrar en pantalla.
-- [ ] En 390px, `/inicio` no tiene scroll horizontal.
-- [ ] `grep -ri "acerca\|about" app/inicio components/landing.tsx` no devuelve resultados.
-- [ ] Ninguna ruta lanza errores en la consola del navegador.
+- [X] `npm run build` termina sin errores.
+- [X] `npm run lint` termina sin errores nuevos.
+- [X] Nav de escritorio: los enlaces están en orden "Inicio", "Biblioteca", "Salón de la Fama".
+- [X] Menú móvil (390px): "Inicio" es el primer enlace del panel y abre `/inicio`.
+- [X] Click en "Inicio" navega a `/inicio`. En esa ruta solo "Inicio" tiene clase `active`.
+- [X] Click en el logo navega a `/inicio`.
+- [X] `/` sigue mostrando la biblioteca con las 8 tarjetas de `GAMES`, sin cambios.
+- [X] `/inicio` muestra, en orden: hero con "EL ARCADE / CLÁSICO ESTÁ / DE VUELTA", "¿POR QUÉ ARCADE VAULT?" con 4 tarjetas, "JUEGOS DISPONIBLES AHORA" con 6 mini-tarjetas, stats, "ACTIVIDAD EN VIVO", "PRECIOS" con FAQ de 3 ítems, "¿LISTO PARA JUGAR?".
+- [X] "EXPLORAR JUEGOS", "VER TODOS LOS JUEGOS" e "INSERTAR MONEDA" llevan a `/`.
+- [X] "CREAR CUENTA" y "EMPEZAR GRATIS" llevan a `/auth`.
+- [X] "VER SALÓN" lleva a `/salon`.
+- [X] Click en una mini-tarjeta lleva a `/juego/[id]` con el id de ese juego.
+- [X] Al hacer scroll, cada `.reveal` recibe la clase `in` al entrar en pantalla.
+- [X] En 390px, `/inicio` no tiene scroll horizontal.
+- [X] `grep -ri "acerca\|about" app/inicio components/landing.tsx` no devuelve resultados.
+- [X] Ninguna ruta lanza errores en la consola del navegador.
 
 ---
 
