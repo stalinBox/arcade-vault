@@ -1,6 +1,6 @@
 # SPEC 03 — Pantalla Acerca de con formulario de contacto (Resend)
 
-**Estado:** Approved
+**Estado:** Implemented
 **Fecha:** 2026-11-09
 **Depende de:** SPEC 01 (nav, layout, `globals.css`), SPEC 02 (patrón de página + `useReveal`)
 **Fuente de diseño:** `references/templates/home-about/about.jsx` (y bloque `/* ===== ABOUT PAGE ===== */` de `references/templates/home-about/styles.css`)
@@ -99,26 +99,26 @@ Cada paso deja la app compilando (`npm run build`).
 
 ## 4. Criterios de aceptación
 
-- [ ] `npm run build` termina sin errores.
-- [ ] `npm run lint` termina sin errores nuevos.
-- [ ] Nav de escritorio: los enlaces están en orden "Inicio", "Biblioteca", "Salón de la Fama", "Acerca de".
-- [ ] Menú móvil (390px): "Acerca de" está después de "Salón de la Fama" y antes de "Iniciar Sesión", y abre `/acerca`.
-- [ ] Click en "Acerca de" navega a `/acerca`. En esa ruta solo "Acerca de" tiene clase `active`.
-- [ ] `/acerca` muestra, en orden: kicker "▸ ACERCA DE", título "ACERCA DE ARCADE VAULT", párrafo de misión, 3 tarjetas de highlight, divisor pixel, kicker "▸ CONTACTO", título "CONTÁCTANOS", 3 tips y formulario con NOMBRE, CORREO ELECTRÓNICO, MENSAJE y botón "▶  ENVIAR MENSAJE".
-- [ ] Enviar con un campo vacío añade la clase `shake` al formulario y no hace petición al servidor (se ve en la pestaña Red).
-- [ ] Correo con formato inválido (p. ej. `abc`) muestra "El correo no es válido." dentro del formulario.
-- [ ] Sin `RESEND_API_KEY`, el envío muestra "El servicio de correo no está configurado." y los campos conservan lo escrito.
-- [ ] Mientras se envía, el botón está deshabilitado y muestra "▶  ENVIANDO…".
-- [ ] Envío correcto: llega un correo a `CONTACT_TO_EMAIL` con asunto `[Arcade Vault] Mensaje de {nombre}`, cuerpo con nombre, correo y mensaje, y "Responder" va al correo del visitante.
-- [ ] Envío correcto muestra la terminal con "> MENSAJE RECIBIDO. TE RESPONDEREMOS PRONTO. GRACIAS, {NOMBRE}.".
-- [ ] "ENVIAR OTRO MENSAJE" vuelve al formulario vacío.
-- [ ] Con una `RESEND_API_KEY` inválida, el formulario muestra "No pudimos enviar tu mensaje. Inténtalo de nuevo.", conserva los campos y el servidor registra `[contacto] Resend:`.
-- [ ] Un nombre de más de 80 caracteres o un mensaje de más de 2000 es rechazado por el servidor sin llamar a Resend.
-- [ ] `grep -r "RESEND_API_KEY" .next/static` no devuelve resultados (la clave no llega al cliente).
-- [ ] Al hacer scroll, cada `.reveal` de `/acerca` recibe la clase `in`.
-- [ ] En 390px, `/acerca` no tiene scroll horizontal.
-- [ ] `/inicio` sigue mostrando la misma landing tras extraer `useReveal`.
-- [ ] Ninguna ruta lanza errores en la consola del navegador.
+- [X] `npm run build` termina sin errores.
+- [X] `npm run lint` termina sin errores nuevos.
+- [X] Nav de escritorio: los enlaces están en orden "Inicio", "Biblioteca", "Salón de la Fama", "Acerca de".
+- [X] Menú móvil (390px): "Acerca de" está después de "Salón de la Fama" y antes de "Iniciar Sesión", y abre `/acerca`.
+- [X] Click en "Acerca de" navega a `/acerca`. En esa ruta solo "Acerca de" tiene clase `active`.
+- [X] `/acerca` muestra, en orden: kicker "▸ ACERCA DE", título "ACERCA DE ARCADE VAULT", párrafo de misión, 3 tarjetas de highlight, divisor pixel, kicker "▸ CONTACTO", título "CONTÁCTANOS", 3 tips y formulario con NOMBRE, CORREO ELECTRÓNICO, MENSAJE y botón "▶  ENVIAR MENSAJE".
+- [X] Enviar con un campo vacío añade la clase `shake` al formulario y no hace petición al servidor (se ve en la pestaña Red).
+- [X] Correo con formato inválido (p. ej. `abc`) muestra "El correo no es válido." dentro del formulario.
+- [X] Sin `RESEND_API_KEY`, el envío muestra "El servicio de correo no está configurado." y los campos conservan lo escrito.
+- [X] Mientras se envía, el botón está deshabilitado y muestra "▶  ENVIANDO…".
+- [X] Envío correcto: llega un correo a `CONTACT_TO_EMAIL` con asunto `[Arcade Vault] Mensaje de {nombre}`, cuerpo con nombre, correo y mensaje, y "Responder" va al correo del visitante.
+- [X] Envío correcto muestra la terminal con "> MENSAJE RECIBIDO. TE RESPONDEREMOS PRONTO. GRACIAS, {NOMBRE}.".
+- [X] "ENVIAR OTRO MENSAJE" vuelve al formulario vacío.
+- [ ] Con una `RESEND_API_KEY` inválida, el formulario muestra "No pudimos enviar tu mensaje. Inténtalo de nuevo.", conserva los campos y el servidor registra `[contacto] Resend:`. *(No probado con clave inválida. Verificado el error real de Resend: destinatario restringido en modo prueba. Mismo camino de error.)*
+- [X] Un nombre de más de 80 caracteres o un mensaje de más de 2000 es rechazado por el servidor sin llamar a Resend.
+- [X] `grep -r "RESEND_API_KEY" .next/static` no devuelve resultados (la clave no llega al cliente).
+- [X] Al hacer scroll, cada `.reveal` de `/acerca` recibe la clase `in`.
+- [X] En 390px, `/acerca` no tiene scroll horizontal.
+- [X] `/inicio` sigue mostrando la misma landing tras extraer `useReveal`.
+- [X] Ninguna ruta lanza errores en la consola del navegador.
 
 ---
 
