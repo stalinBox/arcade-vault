@@ -1,6 +1,6 @@
 # SPEC 04 — Cimientos de Supabase en Next.js
 
-**Estado:** Approved
+**Estado:** Implemented
 **Fecha:** 2026-11-09
 **Depende de:** SPEC 01 (estructura `app/`, `lib/`), SPEC 03 (patrón de variables de entorno en `.env.template` / `.env.local`)
 **Fuente de referencia:** guía "Setting up Server-Side Auth for Next.js" de Supabase (`@supabase/ssr`) y `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`
@@ -90,20 +90,20 @@ Cada paso deja la app compilando (`npm run build`).
 
 ## 4. Criterios de aceptación
 
-- [ ] `npm run build` termina sin errores.
-- [ ] `npm run lint` termina sin errores nuevos.
-- [ ] `package.json` lista `@supabase/supabase-js` y `@supabase/ssr` en `dependencies`.
-- [ ] `.env.template` contiene `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` con placeholders, sin valores reales.
-- [ ] `git status` no muestra `.env.local` como archivo a commitear.
-- [ ] Existen `lib/supabase/client.ts`, `lib/supabase/server.ts` y `proxy.ts`; ningún otro archivo de código nuevo fuera de `supabase/`.
-- [ ] La ruta temporal de smoke test respondió HTTP 200 con `{ ok: true }` en `npm run dev` y fue eliminada (`app/api/` no existe).
-- [ ] Con las variables ausentes, el cliente falla con un error claro al construirse (no un `undefined` silencioso).
-- [ ] `/`, `/inicio`, `/salon`, `/acerca` y `/auth` cargan igual que antes, sin errores en la consola del navegador.
-- [ ] El formulario de `/acerca` (SPEC 03) sigue enviando correos.
-- [ ] La respuesta de una ruta incluye las cookies `sb-*` solo cuando existe una sesión (sin sesión no se crean cookies).
-- [ ] `supabase/config.toml` y `supabase/migrations/` (vacía) existen y `npx supabase link` terminó sin error.
-- [ ] `grep -r "service_role" app lib proxy.ts .env.template` no devuelve resultados.
-- [ ] `grep -r "RESEND_API_KEY" .next/static` sigue sin resultados (el proxy no filtra variables de servidor al cliente).
+- [X] `npm run build` termina sin errores.
+- [X] `npm run lint` termina sin errores nuevos.
+- [X] `package.json` lista `@supabase/supabase-js` y `@supabase/ssr` en `dependencies`.
+- [X] `.env.template` contiene `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` con placeholders, sin valores reales.
+- [X] `git status` no muestra `.env.local` como archivo a commitear.
+- [X] Existen `lib/supabase/client.ts`, `lib/supabase/server.ts` y `proxy.ts`; ningún otro archivo de código nuevo fuera de `supabase/`.
+- [X] La ruta temporal de smoke test respondió HTTP 200 con `{ ok: true }` en `npm run dev` y fue eliminada (`app/api/` no existe).
+- [X] Con las variables ausentes, el cliente falla con un error claro al construirse (no un `undefined` silencioso).
+- [X] `/`, `/inicio`, `/salon`, `/acerca` y `/auth` cargan igual que antes, sin errores en la consola del navegador.
+- [X] El formulario de `/acerca` (SPEC 03) sigue enviando correos.
+- [X] La respuesta de una ruta incluye las cookies `sb-*` solo cuando existe una sesión (sin sesión no se crean cookies).
+- [X] `supabase/config.toml` y `supabase/migrations/` (vacía) existen y `npx supabase link` terminó sin error.
+- [X] `grep -r "service_role" app lib proxy.ts .env.template` no devuelve resultados.
+- [X] `grep -r "RESEND_API_KEY" .next/static` sigue sin resultados (el proxy no filtra variables de servidor al cliente).
 
 ---
 
