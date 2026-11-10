@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { Leaderboard } from "@/components/leaderboard";
 import { GAMES } from "@/lib/games";
 import { seededScores } from "@/lib/scores";
@@ -8,7 +9,19 @@ export function generateStaticParams() {
   return GAMES.map((g) => ({ id: g.id }));
 }
 
-export default async function GameDetailPage({ params }: PageProps<"/juego/[id]">) {
+// `params` is read inside <Suspense> (Cache Components + Partial Prefetching):
+// the static shell stays URL-independent and navigations remain instant.
+export default function GameDetailPage({ params }: PageProps<"/juego/[id]">) {
+  return (
+    <Suspense fallback={<div className="av-detail" aria-busy="true" />}>
+      <GameDetail params={params} />
+    </Suspense>
+  );
+}
+
+async function GameDetail({
+  params,
+}: Pick<PageProps<"/juego/[id]">, "params">) {
   const { id } = await params;
   const game = GAMES.find((g) => g.id === id);
   if (!game) notFound();
@@ -36,20 +49,36 @@ export default async function GameDetailPage({ params }: PageProps<"/juego/[id]"
             </div>
             <div>
               <div className="l">Mejor global</div>
-              <div className="v" style={{ color: "var(--magenta)", textShadow: "0 0 6px rgba(255,0,110,0.5)" }}>
+              <div
+                className="v"
+                style={{
+                  color: "var(--magenta)",
+                  textShadow: "0 0 6px rgba(255,0,110,0.5)",
+                }}
+              >
                 {game.best.toLocaleString("es-ES")}
               </div>
             </div>
             <div>
               <div className="l">Dificultad</div>
-              <div className="v" style={{ color: "var(--yellow)", textShadow: "0 0 6px rgba(245,255,0,0.5)" }}>
+              <div
+                className="v"
+                style={{
+                  color: "var(--yellow)",
+                  textShadow: "0 0 6px rgba(245,255,0,0.5)",
+                }}
+              >
                 ★ ★ ★ ☆ ☆
               </div>
             </div>
           </div>
           <div className="detail-actions">
-            <Link href={`/jugar/${game.id}`} className="btn xl pulse">▶  JUGAR AHORA</Link>
-            <Link href="/biblioteca" className="btn ghost lg">VOLVER AL VAULT</Link>
+            <Link href={`/jugar/${game.id}`} className="btn xl pulse">
+              ▶ JUGAR AHORA
+            </Link>
+            <Link href="/biblioteca" className="btn ghost lg">
+              VOLVER AL VAULT
+            </Link>
           </div>
         </div>
       </div>

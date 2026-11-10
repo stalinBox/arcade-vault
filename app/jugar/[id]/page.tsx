@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { AsteroidsPlayer } from "@/components/asteroids-player";
 import { CrtScreen } from "@/components/crt-screen";
 import { GAMES } from "@/lib/games";
@@ -13,9 +14,19 @@ const SCORE = 0;
 const LIVES = 3;
 const LEVEL = 1;
 
-export default async function GamePlayerPage({
+// `params` is read inside <Suspense> (Cache Components + Partial Prefetching):
+// the static shell stays URL-independent and navigations remain instant.
+export default function GamePlayerPage({ params }: PageProps<"/jugar/[id]">) {
+  return (
+    <Suspense fallback={<div className="av-player" aria-busy="true" />}>
+      <GamePlayer params={params} />
+    </Suspense>
+  );
+}
+
+async function GamePlayer({
   params,
-}: PageProps<"/jugar/[id]">) {
+}: Pick<PageProps<"/jugar/[id]">, "params">) {
   const { id } = await params;
   const game = GAMES.find((g) => g.id === id);
   if (!game) notFound();
