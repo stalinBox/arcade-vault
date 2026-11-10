@@ -1,4 +1,4 @@
-import type { ScoreRow } from "@/lib/scores";
+import type { ScoreRow } from "@/lib/scores-types";
 
 const TOP = ["top1", "top2", "top3"];
 
@@ -6,8 +6,11 @@ export function Leaderboard({ rows, title = "MEJORES PUNTUACIONES" }: { rows: Sc
   return (
     <div className="leaderboard">
       <h3>{title}</h3>
+      {rows.length === 0 && (
+        <p style={{ color: "var(--ink-faint)", padding: "12px 0" }}>Sin puntuaciones todavía</p>
+      )}
       {rows.map((r, i) => (
-        <div key={r.name} className={["lb-row", TOP[i]].filter(Boolean).join(" ")}>
+        <div key={r.rank} className={["lb-row", TOP[i]].filter(Boolean).join(" ")}>
           <div className="rk">#{String(r.rank).padStart(2, "0")}</div>
           <div className="pl">
             {r.name}
