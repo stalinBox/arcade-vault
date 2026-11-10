@@ -2,20 +2,27 @@
 
 import { useMemo, useState } from "react";
 import { GameCard } from "@/components/game-card";
-import { CATS, GAMES } from "@/lib/games-types";
+import { CATS, type Game } from "@/lib/games-types";
 
-export function Library() {
+export function Library({ games }: { games: Game[] }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<(typeof CATS)[number]>("TODOS");
 
+  // Solo categorías con al menos un juego en el catálogo.
+  const cats = useMemo(
+    () => CATS.filter((c) => c === "TODOS" || games.some((g) => g.cat === c)),
+    [games],
+  );
+
   const filtered = useMemo(() => {
     const needle = q.toLowerCase();
-    return GAMES.filter(
+    return games.filter(
       (g) =>
         (cat === "TODOS" || g.cat === cat) &&
-        (g.title.toLowerCase().includes(needle) || g.short.toLowerCase().includes(needle)),
+        (g.title.toLowerCase().includes(needle) ||
+          g.short.toLowerCase().includes(needle)),
     );
-  }, [q, cat]);
+  }, [games, q, cat]);
 
   return (
     <div className="fade-in">
@@ -28,7 +35,9 @@ export function Library() {
 
       <div className="av-filters">
         <div className="av-search">
-          <span className="ico" aria-hidden="true">⌕</span>
+          <span className="ico" aria-hidden="true">
+            ⌕
+          </span>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -37,7 +46,7 @@ export function Library() {
           />
         </div>
         <div className="av-chips">
-          {CATS.map((c) => (
+          {cats.map((c) => (
             <button
               key={c}
               className={"chip" + (cat === c ? " active" : "")}
@@ -55,8 +64,22 @@ export function Library() {
           <GameCard key={g.id} game={g} />
         ))}
         {filtered.length === 0 && (
-          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: 80, color: "var(--ink-faint)" }}>
-            <div className="pixel" style={{ fontSize: 14, color: "var(--magenta)", marginBottom: 12 }}>
+          <div
+            style={{
+              gridColumn: "1 / -1",
+              textAlign: "center",
+              padding: 80,
+              color: "var(--ink-faint)",
+            }}
+          >
+            <div
+              className="pixel"
+              style={{
+                fontSize: 14,
+                color: "var(--magenta)",
+                marginBottom: 12,
+              }}
+            >
               NO HAY RESULTADOS
             </div>
             <div>Intenta otra búsqueda o categoría.</div>
