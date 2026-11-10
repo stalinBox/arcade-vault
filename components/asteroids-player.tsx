@@ -101,14 +101,9 @@ export function AsteroidsPlayer() {
         </div>
       </div>
 
-      <div className="crt">
+      <div className="crt crt-game">
         <div className="crt-screen">
-          <canvas
-            ref={canvasRef}
-            width={800}
-            height={600}
-            style={{ display: "block", width: "100%", height: "100%" }}
-          />
+          <canvas ref={canvasRef} width={800} height={600} />
         </div>
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
