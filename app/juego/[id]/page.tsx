@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Leaderboard } from "@/components/leaderboard";
-import { GAMES } from "@/lib/games";
-import { seededScores } from "@/lib/scores";
+import { GAMES, getGame } from "@/lib/games";
+import { getTopScores } from "@/lib/scores";
 
 export function generateStaticParams() {
   return GAMES.map((g) => ({ id: g.id }));
@@ -23,9 +23,8 @@ async function GameDetail({
   params,
 }: Pick<PageProps<"/juego/[id]">, "params">) {
   const { id } = await params;
-  const game = GAMES.find((g) => g.id === id);
+  const [game, scores] = await Promise.all([getGame(id), getTopScores(id, 10)]);
   if (!game) notFound();
-  const scores = seededScores(id.length * 17 + 3, 10);
 
   return (
     <div className="av-detail fade-in">
