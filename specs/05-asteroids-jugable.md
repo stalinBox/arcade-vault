@@ -1,6 +1,6 @@
 # SPEC 05 — Asteroids jugable en `/jugar/asteroids`
 
-**Estado:** APPROVED
+**Estado:** IMPLEMENTED
 **Fecha:** 2026-11-10
 **Depende de:** SPEC 01 (rutas `/juego/[id]` y `/jugar/[id]`, HUD `.player-hud`, marco `.crt`, `lib/games.ts`)
 **Fuente de referencia:** `references/started-games/02-asteroids/` (`game.js`, `index.html`, `README.md`, `CLAUDE.md`). Esa carpeta no se modifica.
@@ -135,33 +135,33 @@ Cada paso deja la app compilando (`npm run build`).
 
 ## 4. Criterios de aceptación
 
-- [ ] `npm run build` termina sin errores.
-- [ ] `npm run lint` termina sin errores nuevos.
-- [ ] `/jugar/asteroids` muestra el HUD de la plataforma y el canvas del juego dentro del marco CRT, sin HUD dibujado en el canvas.
-- [ ] El juego arranca solo al entrar: aparecen asteroides grandes y la nave en el centro.
-- [ ] `←` `→` rotan, `↑` propulsa y `Espacio` dispara.
-- [ ] Con el foco en la página, las flechas y `Espacio` no hacen scroll.
-- [ ] Destruir un asteroide grande suma 20, mediano 50 y pequeño 100; el valor de `PUNTUACIÓN` en el HUD cambia en el mismo momento.
-- [ ] Un asteroide grande destruido se parte en medianos, y un mediano en pequeños.
-- [ ] El HUD empieza en `VIDAS ♥ ♥ ♥` y `NIVEL 01`; al chocar pierde un `♥`.
-- [ ] Tras perder una vida, la nave reaparece parpadeando y es invulnerable durante el tiempo del original.
-- [ ] Limpiar todos los asteroides sube el `NIVEL` en el HUD.
-- [ ] Pulsar `P` pausa: nada se mueve, el canvas muestra el overlay `PAUSA`, el botón dice `REANUDAR`. Pulsar `P` de nuevo continúa desde el mismo punto.
-- [ ] El botón `PAUSA` hace lo mismo que `P`.
-- [ ] Durante la pausa, el temporizador de respawn y la invencibilidad no avanzan.
-- [ ] Al quedarse sin vidas, el canvas muestra el overlay `GAME OVER` con la puntuación final y `onGameOver` se llama exactamente una vez (verificable con un `console.log` temporal que se elimina).
-- [ ] Pulsar `FIN` durante la partida produce el mismo `GAME OVER` y la misma única llamada a `onGameOver`.
-- [ ] En `GAME OVER`, `Enter` inicia una partida nueva con puntuación 0, 3 vidas y nivel 1.
-- [ ] En `GAME OVER`, el botón `NUEVA PARTIDA` hace lo mismo y `PAUSA` está deshabilitado.
-- [ ] Pulsar `P` en `GAME OVER` no hace nada.
-- [ ] `SALIR` navega a `/juego/asteroids`; volver a `/jugar/asteroids` empieza una partida limpia (sin teclas ni puntuación residuales).
-- [ ] Al salir de `/jugar/asteroids`, el bucle se detiene (el `<canvas>` ya no se redibuja) y las flechas vuelven a hacer scroll en otras páginas.
-- [ ] Con `reactStrictMode` activo en `npm run dev`, no hay dos bucles simultáneos (la nave no va al doble de velocidad).
-- [ ] `/jugar/bloque-buster` (u otro id distinto de `asteroids`) sigue mostrando el `CrtScreen` y el HUD estático de antes.
-- [ ] `/juego/asteroids` ya no menciona OVNIs; el leaderboard y "Mejor global" no cambian.
-- [ ] En 390 px, `/jugar/asteroids` no tiene scroll horizontal y el canvas conserva relación 4:3.
-- [ ] La consola del navegador no muestra errores ni warnings de hidratación en `/jugar/asteroids`.
-- [ ] `git status` no muestra cambios dentro de `references/`.
+- [X] `npm run build` termina sin errores.
+- [X] `npm run lint` termina sin errores nuevos.
+- [X] `/jugar/asteroids` muestra el HUD de la plataforma y el canvas del juego dentro del marco CRT, sin HUD dibujado en el canvas.
+- [X] El juego arranca solo al entrar: aparecen asteroides grandes y la nave en el centro.
+- [X] `←` `→` rotan, `↑` propulsa y `Espacio` dispara.
+- [X] Con el foco en la página, las flechas y `Espacio` no hacen scroll.
+- [X] Destruir un asteroide grande suma 20, mediano 50 y pequeño 100; el valor de `PUNTUACIÓN` en el HUD cambia en el mismo momento.
+- [X] Un asteroide grande destruido se parte en medianos, y un mediano en pequeños.
+- [X] El HUD empieza en `VIDAS ♥ ♥ ♥` y `NIVEL 01`; al chocar pierde un `♥`.
+- [X] Tras perder una vida, la nave reaparece parpadeando y es invulnerable durante el tiempo del original.
+- [X] Limpiar todos los asteroides sube el `NIVEL` en el HUD.
+- [X] Pulsar `P` pausa: nada se mueve, el canvas muestra el overlay `PAUSA`, el botón dice `REANUDAR`. Pulsar `P` de nuevo continúa desde el mismo punto.
+- [X] El botón `PAUSA` hace lo mismo que `P`.
+- [X] Durante la pausa, el temporizador de respawn y la invencibilidad no avanzan.
+- [X] Al quedarse sin vidas, el canvas muestra el overlay `GAME OVER` con la puntuación final y `onGameOver` se llama exactamente una vez (verificable con un `console.log` temporal que se elimina).
+- [X] Pulsar `FIN` durante la partida produce el mismo `GAME OVER` y la misma única llamada a `onGameOver`.
+- [X] En `GAME OVER`, `Enter` inicia una partida nueva con puntuación 0, 3 vidas y nivel 1.
+- [X] En `GAME OVER`, el botón `NUEVA PARTIDA` hace lo mismo y `PAUSA` está deshabilitado.
+- [X] Pulsar `P` en `GAME OVER` no hace nada.
+- [X] `SALIR` navega a `/juego/asteroids`; volver a `/jugar/asteroids` empieza una partida limpia (sin teclas ni puntuación residuales).
+- [X] Al salir de `/jugar/asteroids`, el bucle se detiene (el `<canvas>` ya no se redibuja) y las flechas vuelven a hacer scroll en otras páginas.
+- [X] Con `reactStrictMode` activo en `npm run dev`, no hay dos bucles simultáneos (la nave no va al doble de velocidad).
+- [X] `/jugar/bloque-buster` (u otro id distinto de `asteroids`) sigue mostrando el `CrtScreen` y el HUD estático de antes.
+- [X] `/juego/asteroids` ya no menciona OVNIs; el leaderboard y "Mejor global" no cambian.
+- [X] En 390 px, `/jugar/asteroids` no tiene scroll horizontal y el canvas conserva relación 4:3.
+- [X] La consola del navegador no muestra errores ni warnings de hidratación en `/jugar/asteroids`.
+- [X] `git status` no muestra cambios dentro de `references/`.
 
 ---
 
