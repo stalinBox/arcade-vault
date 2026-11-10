@@ -315,7 +315,7 @@ export function Landing({
         </div>
       </section>
 
-      {/* GAMES PREVIEW */}
+      {/* JUEGOS */}
       <section className="home-section reveal">
         <div className="section-head">
           <div className="kicker pixel neon-cyan">{"// 02"}</div>
