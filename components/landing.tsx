@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { GAMES, type Game } from "@/lib/games";
+import { GAMES, type Game } from "@/lib/games-types";
 import { useReveal } from "@/lib/use-reveal";
 
 function FloatingSilhouettes() {

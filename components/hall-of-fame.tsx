@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { GAMES } from "@/lib/games";
-import { seededScores } from "@/lib/scores";
+import { GAMES } from "@/lib/games-types";
+import { seededScores } from "@/lib/scores-types";
 
 const TOP = ["top1", "top2", "top3"];
 

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { GameCard } from "@/components/game-card";
-import { CATS, GAMES } from "@/lib/games";
+import { CATS, GAMES } from "@/lib/games-types";
 
 export function Library() {
   const [q, setQ] = useState("");
