@@ -2,11 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Leaderboard } from "@/components/leaderboard";
-import { GAMES, getGame } from "@/lib/games";
+import { getGame, getGameIds } from "@/lib/games";
 import { getTopScores } from "@/lib/scores";
 
-export function generateStaticParams() {
-  return GAMES.map((g) => ({ id: g.id }));
+export async function generateStaticParams() {
+  return getGameIds();
 }
 
 // `params` is read inside <Suspense> (Cache Components + Partial Prefetching):

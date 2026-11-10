@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createStaticClient } from "@/lib/supabase/static";
 import type { Game, GameCategory, GameColor } from "./games-types";
 
 // Solo servidor. Los componentes cliente importan tipos y CATS de "./games-types".
@@ -60,6 +61,13 @@ export async function getCatalog(): Promise<Game[]> {
     .order("created_at", { ascending: true });
   if (error) throw error;
   return Promise.all(data.map(withStats));
+}
+
+// Para `generateStaticParams`: corre en build sin petición, así que no puede usar cookies().
+export async function getGameIds(): Promise<{ id: string }[]> {
+  const { data, error } = await createStaticClient().from("games").select("id");
+  if (error) throw error;
+  return data;
 }
 
 export async function getGame(id: string): Promise<Game | null> {

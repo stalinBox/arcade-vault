@@ -3,10 +3,10 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AsteroidsPlayer } from "@/components/asteroids-player";
 import { CrtScreen } from "@/components/crt-screen";
-import { GAMES } from "@/lib/games";
+import { getGame, getGameIds } from "@/lib/games";
 
-export function generateStaticParams() {
-  return GAMES.map((g) => ({ id: g.id }));
+export async function generateStaticParams() {
+  return getGameIds();
 }
 
 // Fixed HUD values: no game logic in this spec.
@@ -28,7 +28,7 @@ async function GamePlayer({
   params,
 }: Pick<PageProps<"/jugar/[id]">, "params">) {
   const { id } = await params;
-  const game = GAMES.find((g) => g.id === id);
+  const game = await getGame(id);
   if (!game) notFound();
 
   if (game.id === "asteroids") return <AsteroidsPlayer />;
