@@ -107,7 +107,7 @@ export function AsteroidsPlayer() {
         </div>
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
-          <span>ROCAS · CRT-83 · 60 HZ</span>
+          <span>ASTEROIDES · CRT-83 · 60 HZ</span>
           <span>CARGA · 1MB</span>
         </div>
       </div>

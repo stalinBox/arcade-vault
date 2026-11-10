@@ -11,14 +11,16 @@ export function HallOfFame() {
   const [tab, setTab] = useState(GAMES[0].id);
   const index = GAMES.findIndex((g) => g.id === tab);
   const game = GAMES[index];
-  // Seed by position so every game gets a distinct table (id length collides, e.g. caida/rocas).
+  // Seed by position so every game gets a distinct table (ids of equal length would otherwise collide).
   const rows = useMemo(() => seededScores((index + 1) * 23 + 7, 12), [index]);
 
   return (
     <div className="av-hall fade-in">
       <div className="hall-head">
         <h1>SALÓN DE LA FAMA</h1>
-        <p className="pixel" style={{ fontSize: 10 }}>LOS NOMBRES QUE NUNCA SE BORRAN DE LA PANTALLA</p>
+        <p className="pixel" style={{ fontSize: 10 }}>
+          LOS NOMBRES QUE NUNCA SE BORRAN DE LA PANTALLA
+        </p>
       </div>
 
       <div className="hall-tabs">
@@ -35,7 +37,10 @@ export function HallOfFame() {
         ))}
       </div>
 
-      <h2 className="pixel neon-cyan" style={{ fontSize: 14, textAlign: "center", margin: "0 0 24px" }}>
+      <h2
+        className="pixel neon-cyan"
+        style={{ fontSize: 14, textAlign: "center", margin: "0 0 24px" }}
+      >
         {game.title}
       </h2>
 
@@ -47,10 +52,23 @@ export function HallOfFame() {
           <div className="date">{rows[1].date}</div>
         </div>
         <div className="podium-slot gold">
-          <div className="pixel" style={{ fontSize: 9, color: "var(--gold)", letterSpacing: "0.18em" }}>CAMPEÓN</div>
-          <div className="rank-num" style={{ fontSize: 36, marginTop: 4 }}>01</div>
+          <div
+            className="pixel"
+            style={{
+              fontSize: 9,
+              color: "var(--gold)",
+              letterSpacing: "0.18em",
+            }}
+          >
+            CAMPEÓN
+          </div>
+          <div className="rank-num" style={{ fontSize: 36, marginTop: 4 }}>
+            01
+          </div>
           <div className="name">{rows[0].name}</div>
-          <div className="score" style={{ fontSize: 20 }}>{rows[0].score.toLocaleString("es-ES")}</div>
+          <div className="score" style={{ fontSize: 20 }}>
+            {rows[0].score.toLocaleString("es-ES")}
+          </div>
           <div className="date">{rows[0].date}</div>
         </div>
         <div className="podium-slot bronze">
@@ -70,7 +88,11 @@ export function HallOfFame() {
         </div>
         {rows.map((r, i) => (
           // Keyed by tab too so the row entrance animation replays on tab change, as in the template.
-          <div key={tab + r.name} className={["tr", TOP[i]].filter(Boolean).join(" ")} style={{ animationDelay: `${i * 50}ms` }}>
+          <div
+            key={tab + r.name}
+            className={["tr", TOP[i]].filter(Boolean).join(" ")}
+            style={{ animationDelay: `${i * 50}ms` }}
+          >
             <div className="rk">#{String(r.rank).padStart(2, "0")}</div>
             <div className="pl">{r.name}</div>
             <div className="sc">{r.score.toLocaleString("es-ES")}</div>
@@ -80,7 +102,9 @@ export function HallOfFame() {
       </div>
 
       <div style={{ textAlign: "center", marginTop: 32 }}>
-        <Link href="/biblioteca" className="btn lg">VOLVER A LA BIBLIOTECA</Link>
+        <Link href="/biblioteca" className="btn lg">
+          VOLVER A LA BIBLIOTECA
+        </Link>
       </div>
     </div>
   );
