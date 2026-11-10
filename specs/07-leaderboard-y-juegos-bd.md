@@ -1,6 +1,6 @@
 # SPEC 07 — Leaderboard y tabla de juegos en base de datos
 
-**Estado:** APPROVED
+**Estado:** IMPLEMENTED
 **Fecha:** 2026-11-10
 **Depende de:** SPEC 01 (`/salon`, `/juego/[id]`, `/jugar/[id]`, biblioteca, landing), SPEC 04 (cliente de navegador y servidor de Supabase, `supabase/` con CLI), SPEC 05 (juego Asteroides y su `gameOver` en `lib/asteroids/engine.ts`), SPEC 06 (título `ASTEROIDES`)
 
@@ -199,7 +199,7 @@ Cada paso deja la app compilando (`npm run build`).
 - [ ] La landing muestra solo Asteroides en el bloque de juegos.
 - [ ] `/salon` muestra una sola pestaña, Asteroides, con el ranking real. Con cero filas muestra `Sin puntuaciones todavía`.
 - [ ] `/juego/asteroids` muestra el ranking real y `ASTEROIDES` como título.
-- [ ] `/juego/caida` (y cualquier id inexistente) responde 404.
+- [ ] `/juego/caida` (y cualquier id inexistente) muestra la página 404 (con `noindex`). El código HTTP es 200 porque `notFound()` corre dentro de `<Suspense>` con Cache Components y el shell ya se envió; decisión del usuario: se acepta.
 - [ ] `/jugar/asteroids` abre el juego sin cambios visibles en la barra superior (`ASTEROIDES · CRT-83 · 60 HZ`).
 - [ ] Al terminar una partida de Asteroides con `score > 0`, aparece el formulario; con `score = 0` no aparece.
 - [ ] Guardar una puntuación con un nombre válido crea una fila en `scores` con `game_id = 'asteroids'`, el nombre sin espacios sobrantes y la puntuación de la partida.
