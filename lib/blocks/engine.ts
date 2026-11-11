@@ -73,6 +73,7 @@ const KICKS = [0, -1, 1, -2, 2];
 const GHOST_ALPHA = 0.2;
 const START_INTERVAL = 1000; // ms
 const MAX_DT = 100; // ms: no jump after a background tab
+const MAX_SCORE = 1_000_000; // `scores.score` check
 
 const PREVENT_DEFAULT = [
   "ArrowLeft",
@@ -118,11 +119,29 @@ function rotateCW(shape: number[][]): number[][] {
   return result;
 }
 
+export interface BlocksStats {
+  score: number;
+  lines: number;
+  level: number;
+}
+
+export interface BlocksCallbacks {
+  onStats(stats: BlocksStats): void; // on change and on game start; never per frame
+  onGameOver(result: { score: number; level: number }): void; // once per game
+  onPauseChange(paused: boolean): void;
+}
+
 export interface BlocksController {
+  togglePause(): void; // no effect after game over
+  end(): void; // triggers onGameOver
+  restart(): void; // new game; also Enter on game over
   destroy(): void; // cancels rAF and listeners; idempotent
 }
 
-export function createBlocks(canvas: HTMLCanvasElement): BlocksController {
+export function createBlocks(
+  canvas: HTMLCanvasElement,
+  callbacks: BlocksCallbacks,
+): BlocksController {
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("2D canvas context unavailable");
   const c = ctx;
@@ -135,9 +154,28 @@ export function createBlocks(canvas: HTMLCanvasElement): BlocksController {
   let lines = 0;
   let level = 1;
   let over = false;
+  let paused = false;
+  let lastStats: BlocksStats | null = null;
   let dropInterval = START_INTERVAL;
   let dropAccum = 0;
   let destroyed = false;
+
+  // Every score change goes through here: never above MAX_SCORE.
+  function addScore(points: number) {
+    score = Math.min(score + points, MAX_SCORE);
+  }
+
+  function emitStats() {
+    if (
+      lastStats &&
+      lastStats.score === score &&
+      lastStats.lines === lines &&
+      lastStats.level === level
+    )
+      return;
+    lastStats = { score, lines, level };
+    callbacks.onStats({ ...lastStats });
+  }
 
   function collide(shape: number[][], ox: number, oy: number) {
     for (let r = 0; r < shape.length; r++) {
@@ -182,7 +220,7 @@ export function createBlocks(canvas: HTMLCanvasElement): BlocksController {
     }
     if (cleared) {
       lines += cleared;
-      score += (LINE_SCORES[cleared] || 0) * level;
+      addScore((LINE_SCORES[cleared] || 0) * level);
       level = Math.floor(lines / 10) + 1;
       dropInterval = Math.max(100, START_INTERVAL - (level - 1) * 90);
     }
@@ -208,7 +246,7 @@ export function createBlocks(canvas: HTMLCanvasElement): BlocksController {
 
   function hardDrop() {
     const gy = ghostY();
-    score += (gy - current.y) * 2;
+    addScore((gy - current.y) * 2);
     current.y = gy;
     lockPiece();
   }
@@ -216,14 +254,30 @@ export function createBlocks(canvas: HTMLCanvasElement): BlocksController {
   function softDrop() {
     if (!collide(current.shape, current.x, current.y + 1)) {
       current.y++;
-      score += 1;
+      addScore(1);
     } else {
       lockPiece();
     }
   }
 
+  // Shared by spawn collision and end(): onGameOver fires once per game.
   function gameOver() {
+    if (over) return;
     over = true;
+    emitStats(); // final stats reach React before onGameOver
+    callbacks.onGameOver({ score, level });
+  }
+
+  function setPaused(value: boolean) {
+    if (paused === value) return;
+    paused = value;
+    lastTime = null; // next dt is 0, no jump after resuming
+    callbacks.onPauseChange(paused);
+  }
+
+  function togglePause() {
+    if (destroyed || over) return;
+    setPaused(!paused);
   }
 
   function initGame() {
@@ -235,14 +289,25 @@ export function createBlocks(canvas: HTMLCanvasElement): BlocksController {
     dropInterval = START_INTERVAL;
     dropAccum = 0;
     lastTime = null;
+    lastStats = null;
+    setPaused(false);
     next = randomPiece();
     spawn();
+    emitStats();
   }
 
   // Input: one action per keydown (OS autorepeat included), as in the reference.
   const onKeyDown = (e: KeyboardEvent) => {
     if (PREVENT_DEFAULT.includes(e.code)) e.preventDefault();
-    if (over) return;
+    if (e.code === "KeyP") {
+      if (!e.repeat) togglePause();
+      return;
+    }
+    if (over) {
+      if (e.code === "Enter" && !e.repeat) initGame();
+      return;
+    }
+    if (paused) return;
     switch (e.code) {
       case "ArrowLeft":
         if (!collide(current.shape, current.x - 1, current.y)) current.x--;
@@ -261,6 +326,7 @@ export function createBlocks(canvas: HTMLCanvasElement): BlocksController {
         hardDrop();
         break;
     }
+    if (!over) emitStats();
   };
   window.addEventListener("keydown", onKeyDown);
 
@@ -318,6 +384,19 @@ export function createBlocks(canvas: HTMLCanvasElement): BlocksController {
         );
   }
 
+  // Same texts and type as Asteroides; dimmed backdrop so the board doesn't hide them.
+  function drawOverlay(title: string, sub: string) {
+    c.fillStyle = "rgba(0,0,0,0.7)";
+    c.fillRect(0, H / 2 - 70, W, 120);
+    c.textAlign = "center";
+    c.fillStyle = "#fff";
+    c.font = "bold 46px monospace";
+    c.fillText(title, W / 2, H / 2 - 18);
+    c.font = "18px monospace";
+    c.fillStyle = "rgba(255,255,255,0.65)";
+    c.fillText(sub, W / 2, H / 2 + 22);
+  }
+
   function draw() {
     c.fillStyle = "#000";
     c.fillRect(0, 0, W, H);
@@ -344,6 +423,10 @@ export function createBlocks(canvas: HTMLCanvasElement): BlocksController {
         drawCell(current.x + col, current.y + r, current.shape[r][col]);
 
     drawNext();
+
+    if (over)
+      drawOverlay("GAME OVER", `PUNTAJE: ${score}   —   ENTER PARA REINICIAR`);
+    else if (paused) drawOverlay("PAUSA", "P PARA REANUDAR");
   }
 
   // Main loop: never steps the game after game over (the reference does).
@@ -351,12 +434,13 @@ export function createBlocks(canvas: HTMLCanvasElement): BlocksController {
   let rafId = 0;
 
   function update(dt: number) {
-    if (over) return;
+    if (over || paused) return;
     dropAccum += dt;
     if (dropAccum >= dropInterval) {
       dropAccum = 0;
       if (!collide(current.shape, current.x, current.y + 1)) current.y++;
       else lockPiece();
+      if (!over) emitStats();
     }
   }
 
@@ -372,6 +456,15 @@ export function createBlocks(canvas: HTMLCanvasElement): BlocksController {
   rafId = requestAnimationFrame(loop);
 
   return {
+    togglePause,
+    end() {
+      if (destroyed || over) return;
+      setPaused(false);
+      gameOver();
+    },
+    restart() {
+      if (!destroyed) initGame();
+    },
     destroy() {
       if (destroyed) return;
       destroyed = true;
