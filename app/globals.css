@@ -541,6 +541,34 @@ a { color: inherit; text-decoration: none; }
   filter: drop-shadow(0 0 6px var(--magenta)) drop-shadow(0 0 14px rgba(255,0,110,0.5));
 }
 
+/* ROMPEBLOQUES: five brick rows (gray, hotpink, red, yellow, cyan), a ball and a neon paddle.
+   Container units keep bricks proportional at any card size: 10 bricks of 9cqw from 5cqw. */
+.cover-rompebloques {
+  container-type: size;
+  background: linear-gradient(180deg, #05182a, #0a0a18);
+}
+.cover-rompebloques::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(90deg, #9aa0ad 0 calc(9cqw - 2px), transparent 0 9cqw) 5cqw 8cqh / 90cqw 7cqh,
+    repeating-linear-gradient(90deg, #ff4fa3 0 calc(9cqw - 2px), transparent 0 9cqw) 5cqw 17cqh / 90cqw 7cqh,
+    repeating-linear-gradient(90deg, #ff3b3b 0 calc(9cqw - 2px), transparent 0 9cqw) 5cqw 26cqh / 90cqw 7cqh,
+    repeating-linear-gradient(90deg, var(--yellow) 0 calc(9cqw - 2px), transparent 0 9cqw) 5cqw 35cqh / 90cqw 7cqh,
+    repeating-linear-gradient(90deg, var(--cyan) 0 calc(9cqw - 2px), transparent 0 9cqw) 5cqw 44cqh / 90cqw 7cqh;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 0 4px rgba(0,245,255,0.3));
+}
+.cover-rompebloques::before {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 62cqw 72cqh, #fff 0 2.4cqw, transparent 2.6cqw),
+    linear-gradient(var(--cyan), var(--cyan)) 36cqw 88cqh / 28cqw 3.5cqh;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 14px rgba(0,245,255,0.5));
+}
+
 .cover-rana { background: linear-gradient(180deg,#001f2a,#0a0a18); }
 .cover-rana::after {
   content: "";
