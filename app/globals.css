@@ -506,6 +506,41 @@ a { color: inherit; text-decoration: none; }
   text-shadow: 0 0 8px var(--yellow);
 }
 
+/* BLOQUES: a 10-column well; the falling T and the hole it will fill (ghost at low alpha).
+   Container units keep cells square at any card size: 1 cell = 4cqw, well spans 30cqw–70cqw. */
+.cover-blocks {
+  container-type: size;
+  background: linear-gradient(180deg, #1a0020, #0a0a18);
+}
+.cover-blocks::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    /* ghost T: bar on the stack, stem in the hole */
+    linear-gradient(rgba(255,0,110,0.38), rgba(255,0,110,0.38)) 42cqw calc(100cqh - 16cqw) / 12cqw 4cqw,
+    linear-gradient(rgba(255,0,110,0.38), rgba(255,0,110,0.38)) 46cqw calc(100cqh - 12cqw) / 4cqw 4cqw,
+    /* top row: cols 0–3 and 5–9, hole at col 4 */
+    repeating-linear-gradient(90deg, var(--cyan) 0 calc(4cqw - 1px), transparent 0 4cqw, var(--yellow) 0 calc(8cqw - 1px), transparent 0 8cqw) 30cqw calc(100cqh - 12cqw) / 16cqw 4cqw,
+    repeating-linear-gradient(90deg, var(--green) 0 calc(4cqw - 1px), transparent 0 4cqw, var(--magenta) 0 calc(8cqw - 1px), transparent 0 8cqw) 50cqw calc(100cqh - 12cqw) / 20cqw 4cqw,
+    /* two full rows */
+    repeating-linear-gradient(90deg, var(--magenta) 0 calc(4cqw - 1px), transparent 0 4cqw, var(--green) 0 calc(8cqw - 1px), transparent 0 8cqw, var(--cyan) 0 calc(12cqw - 1px), transparent 0 12cqw) 30cqw calc(100cqh - 8cqw) / 40cqw 4cqw,
+    repeating-linear-gradient(90deg, var(--yellow) 0 calc(4cqw - 1px), transparent 0 4cqw, var(--cyan) 0 calc(8cqw - 1px), transparent 0 8cqw, var(--magenta) 0 calc(12cqw - 1px), transparent 0 12cqw, var(--green) 0 calc(16cqw - 1px), transparent 0 16cqw) 30cqw calc(100cqh - 4cqw) / 40cqw 4cqw,
+    /* well walls */
+    linear-gradient(rgba(255,0,110,0.3), rgba(255,0,110,0.3)) 30cqw 0 / 1px 100%,
+    linear-gradient(rgba(255,0,110,0.3), rgba(255,0,110,0.3)) calc(70cqw - 1px) 0 / 1px 100%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 0 5px rgba(0,245,255,0.35));
+}
+.cover-blocks::before {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(90deg, var(--magenta) 0 calc(4cqw - 1px), transparent 0 4cqw) 42cqw 14cqh / 12cqw 4cqw,
+    linear-gradient(var(--magenta), var(--magenta)) 46cqw calc(14cqh + 4cqw) / calc(4cqw - 1px) 4cqw;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 0 6px var(--magenta)) drop-shadow(0 0 14px rgba(255,0,110,0.5));
+}
+
 .cover-rana { background: linear-gradient(180deg,#001f2a,#0a0a18); }
 .cover-rana::after {
   content: "";
