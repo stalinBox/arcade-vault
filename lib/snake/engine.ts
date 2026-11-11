@@ -142,3 +142,111 @@ export function tick(state: SnakeState, random: Random = Math.random): void {
   state.food = placeFood(state.snake, random);
   if (state.food === null) state.status = "won";
 }
+
+export const CANVAS_SIZE = COLS * CELL;
+
+const COLOR = {
+  board: "#0a0a18",
+  grid: "#16163a",
+  body: "#00ff88",
+  head: "#00f5ff",
+  food: "#ff006e",
+  title: "#00f5ff",
+  sub: "#8a8fb5",
+  veil: "rgba(10, 10, 24, 0.72)",
+};
+
+const MONO = "monospace";
+
+function overlayFor(status: Status, paused: boolean): { title: string; sub: string } | null {
+  if (paused) return { title: "PAUSA", sub: "Pulsa P para reanudar" };
+  if (status === "ready") return { title: "PULSA UNA FLECHA", sub: "" };
+  if (status === "lost") return { title: "GAME OVER", sub: "Enter para reiniciar" };
+  if (status === "won") return { title: "¡GANASTE!", sub: "Enter para reiniciar" };
+  return null;
+}
+
+function drawFood(
+  ctx: CanvasRenderingContext2D,
+  food: Food,
+  sheet: HTMLImageElement | null,
+): void {
+  const px = food.x * CELL;
+  const py = food.y * CELL;
+  if (sheet === null) {
+    ctx.fillStyle = COLOR.food;
+    ctx.beginPath();
+    ctx.arc(px + CELL / 2, py + CELL / 2, CELL / 3, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+  const rect = FRUIT_SPRITES[food.fruit];
+  // Fit the sprite inside the cell without distorting its aspect ratio.
+  const scale = Math.min((CELL - 4) / rect.w, (CELL - 4) / rect.h);
+  const dw = rect.w * scale;
+  const dh = rect.h * scale;
+  ctx.drawImage(
+    sheet,
+    rect.x,
+    rect.y,
+    rect.w,
+    rect.h,
+    px + (CELL - dw) / 2,
+    py + (CELL - dh) / 2,
+    dw,
+    dh,
+  );
+}
+
+function drawOverlay(ctx: CanvasRenderingContext2D, title: string, sub: string): void {
+  const center = CANVAS_SIZE / 2;
+  ctx.fillStyle = COLOR.veil;
+  ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = COLOR.title;
+  ctx.font = `bold 36px ${MONO}`;
+  ctx.fillText(title, center, center - (sub ? 16 : 0));
+  if (sub) {
+    ctx.fillStyle = COLOR.sub;
+    ctx.font = `16px ${MONO}`;
+    ctx.fillText(sub, center, center + 24);
+  }
+}
+
+// Full frame: board, grid, fruit, snake (head drawn last) and status overlay.
+// `sheet` is the loaded fruits.png, or null to draw the fallback circle.
+export function drawBoard(
+  ctx: CanvasRenderingContext2D,
+  state: SnakeState,
+  paused: boolean,
+  sheet: HTMLImageElement | null,
+): void {
+  ctx.fillStyle = COLOR.board;
+  ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+  ctx.strokeStyle = COLOR.grid;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let x = 0; x <= COLS; x++) {
+    ctx.moveTo(x * CELL + 0.5, 0);
+    ctx.lineTo(x * CELL + 0.5, CANVAS_SIZE);
+  }
+  for (let y = 0; y <= ROWS; y++) {
+    ctx.moveTo(0, y * CELL + 0.5);
+    ctx.lineTo(CANVAS_SIZE, y * CELL + 0.5);
+  }
+  ctx.stroke();
+
+  if (state.food) drawFood(ctx, state.food, sheet);
+
+  // Tail to head, so the head is painted on top.
+  for (let i = state.snake.length - 1; i >= 0; i--) {
+    const c = state.snake[i];
+    ctx.fillStyle = i === 0 ? COLOR.head : COLOR.body;
+    ctx.fillRect(c.x * CELL + 1, c.y * CELL + 1, CELL - 2, CELL - 2);
+  }
+
+  const message = overlayFor(state.status, paused);
+  if (message) drawOverlay(ctx, message.title, message.sub);
+}
