@@ -1,6 +1,6 @@
 # Template — spec de un juego + leaderboard
 
-Referencia que consulta `/add-game` al escribir. Forma, no texto literal: sustituir cada `<placeholder>`, borrar bloques condicionales que no apliquen. Estructura y orden de secciones heredados de `/spec` (`.agents/skills/spec/template.md`); contenido invariante sacado de SPEC 05, 06 y 07.
+Referencia que consulta `/add-game` al escribir. Forma, no texto literal: sustituir cada `<placeholder>`, borrar bloques condicionales que no apliquen. Estructura y orden de secciones heredados de `/spec` (`.agents/skills/spec/template.md`); contenido invariante sacado de SPEC 05 y 07.
 
 Placeholders: `<slug>` (id en BD y URL, p. ej. `asteroids`), `<Game>` (PascalCase, p. ej. `Asteroids`), `<TITLE>` (título visible en mayúsculas), `<NN>` (número del spec).
 
