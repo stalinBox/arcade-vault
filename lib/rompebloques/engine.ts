@@ -141,9 +141,63 @@ export function createRompebloques(canvas: HTMLCanvasElement) {
   };
 
   const keys = { left: false, right: false };
+  let paused = false;
 
-  // Placeholder until sound lands (step 3).
-  function playSound(_name: "bounce" | "break") {}
+  // Sound: one shared channel; a new sound cuts the one playing.
+  const sounds = {
+    bounce: new Audio("/games/rompebloques/sounds/ball-bounce.mp3"),
+    break: new Audio("/games/rompebloques/sounds/break-sound.mp3"),
+  };
+  for (const s of Object.values(sounds)) s.preload = "auto";
+  let currentSound: HTMLAudioElement | null = null;
+
+  function playSound(name: keyof typeof sounds) {
+    if (currentSound) {
+      currentSound.pause();
+      currentSound.currentTime = 0;
+    }
+    currentSound = sounds[name];
+    currentSound.currentTime = 0;
+    currentSound.play().catch(() => {}); // autoplay blocked: ignore
+  }
+
+  // Paddle and lives follow the current difficulty.
+  function applyDifficulty() {
+    const d = DIFFICULTIES[state.difficulty];
+    state.paddle.w = d.paddleW;
+    state.paddle.x = (FIELD.w - d.paddleW) / 2;
+    state.lives = d.lives;
+  }
+
+  function resetGame() {
+    paused = false;
+    lastTime = null;
+    state.phase = "ready";
+    state.score = 0;
+    state.level = 0;
+    state.started = false;
+    applyDifficulty();
+    state.ball.vx = state.ball.vy = 0;
+    state.blocks = createBlocks(state.level);
+    state.explosions = [];
+  }
+
+  function togglePause() {
+    if (state.phase === "won" || state.phase === "lost") return;
+    paused = !paused;
+    lastTime = null; // no time jump on resume
+    if (paused) currentSound?.pause(); // never resumed
+  }
+
+  function launch() {
+    state.phase = "playing";
+    state.started = true;
+    state.ball.speed =
+      DIFFICULTIES[state.difficulty].ballSpeed *
+      (1 + LEVEL_SPEED_STEP * state.level);
+    state.ball.vx = 0;
+    state.ball.vy = -state.ball.speed;
+  }
 
   function stickBallToPaddle() {
     const p = state.paddle;
@@ -277,6 +331,85 @@ export function createRompebloques(canvas: HTMLCanvasElement) {
     }
   }
 
+  const DIFFICULTY_KEYS: Record<string, Difficulty> = {
+    Digit1: "easy",
+    Digit2: "normal",
+    Digit3: "hard",
+  };
+  const DIFFICULTY_LABELS: Record<Difficulty, string> = {
+    easy: "Fácil",
+    normal: "Normal",
+    hard: "Difícil",
+  };
+  const PREVENT_DEFAULT = ["ArrowLeft", "ArrowRight", "Space", "Enter"];
+
+  // Typing in a form field (e.g. the score name) must not drive the game.
+  function isTyping(e: KeyboardEvent) {
+    const t = e.target;
+    return (
+      t instanceof HTMLInputElement ||
+      t instanceof HTMLTextAreaElement ||
+      t instanceof HTMLSelectElement
+    );
+  }
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (isTyping(e)) return;
+    if (PREVENT_DEFAULT.includes(e.code)) e.preventDefault();
+    switch (e.code) {
+      case "ArrowLeft":
+        keys.left = true;
+        break;
+      case "ArrowRight":
+        keys.right = true;
+        break;
+      case "Space":
+        if (e.repeat || paused) break;
+        if (state.phase === "ready") launch();
+        else if (state.phase === "won" || state.phase === "lost") resetGame();
+        break;
+      case "Enter":
+        if (e.repeat || paused) break;
+        if (state.phase === "won" || state.phase === "lost") resetGame();
+        break;
+      case "KeyP":
+        if (!e.repeat) togglePause();
+        break;
+      case "Digit1":
+      case "Digit2":
+      case "Digit3":
+        // Only in 'ready' before the first launch of the game.
+        if (!paused && state.phase === "ready" && !state.started) {
+          state.difficulty = DIFFICULTY_KEYS[e.code];
+          applyDifficulty();
+        }
+        break;
+    }
+  };
+  const onKeyUp = (e: KeyboardEvent) => {
+    if (e.code === "ArrowLeft") keys.left = false;
+    else if (e.code === "ArrowRight") keys.right = false;
+  };
+  window.addEventListener("keydown", onKeyDown);
+  window.addEventListener("keyup", onKeyUp);
+
+  function drawOverlay(title: string, sub?: string, veil = false) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (veil) {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    }
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "48px monospace";
+    ctx.fillText(title, CANVAS_W / 2, CANVAS_H / 2);
+    if (sub) {
+      ctx.font = "20px monospace";
+      ctx.fillText(sub, CANVAS_W / 2, CANVAS_H / 2 + 48);
+    }
+  }
+
   function draw() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = "#1b1b2f";
@@ -312,6 +445,28 @@ export function createRompebloques(canvas: HTMLCanvasElement) {
 
     const b = state.ball;
     drawSprite(ctx, "ball", b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+
+    if (paused) {
+      drawOverlay("PAUSA", undefined, true);
+    } else if (state.phase === "ready") {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "24px monospace";
+      ctx.fillText("Pulsa Espacio para lanzar", CANVAS_W / 2, 440);
+      ctx.font = "18px monospace";
+      ctx.fillText(
+        `Dificultad: ${DIFFICULTY_LABELS[state.difficulty]} · 1/2/3 cambia`,
+        CANVAS_W / 2,
+        474,
+      );
+    } else if (state.phase === "lost" || state.phase === "won") {
+      drawOverlay(
+        state.phase === "won" ? "¡GANASTE!" : "GAME OVER",
+        `Puntuación: ${state.score}`,
+      );
+    }
   }
 
   let raf = 0;
@@ -320,7 +475,9 @@ export function createRompebloques(canvas: HTMLCanvasElement) {
 
   function frame(now: number) {
     if (destroyed) return;
-    if (lastTime !== null) update(Math.min((now - lastTime) / 1000, 0.05)); // dt in s, capped at 50 ms
+    if (lastTime !== null && !paused) {
+      update(Math.min((now - lastTime) / 1000, 0.05)); // dt in s, capped at 50 ms
+    }
     lastTime = now;
     draw();
     raf = requestAnimationFrame(frame);
@@ -334,6 +491,9 @@ export function createRompebloques(canvas: HTMLCanvasElement) {
     destroy() {
       destroyed = true;
       cancelAnimationFrame(raf);
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      currentSound?.pause();
     },
   };
 }
