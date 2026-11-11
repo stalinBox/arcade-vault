@@ -1,6 +1,6 @@
 # SPEC 10 — SNAKE jugable en `/jugar/snake` con su leaderboard
 
-**Estado:** APPROVED
+**Estado:** IMPLEMENTED
 **Fecha:** 2026-11-11
 **Depende de:** SPEC 01 (rutas `/juego/[id]` y `/jugar/[id]`, HUD `.player-hud`, marco `.crt`), SPEC 04 (clientes de Supabase, CLI), SPEC 05 (patrón de engine + player), SPEC 07 (tablas `games` y `scores`, `ScoreForm`, `GAME_PLAYERS`)
 **Fuente de referencia:** Ninguna. Diseño propio. Sprites de frutas: `references/source-assets/snake-assets/fruits.png` y `sprites.js` (recorte `SPRITE_ATLAS.fruits`, 22 frutas). Esa carpeta no se modifica.
@@ -162,36 +162,36 @@ Cada paso deja la app compilando (`npm run build`).
 
 ## 4. Criterios de aceptación
 
-- [ ] `npm run build` termina sin errores.
-- [ ] `npm run lint` termina sin errores nuevos.
-- [ ] `supabase/migrations/` contiene exactamente un archivo nuevo con el SQL de la sección 2.
-- [ ] `npx supabase db push` termina sin error.
-- [ ] La tabla `games` contiene una fila con `id = 'snake'` y las filas previas intactas.
-- [ ] `/biblioteca` muestra la tarjeta `SNAKE` con la portada `.cover-snake`, sin errores en consola.
-- [ ] `/juego/snake` muestra `SNAKE` y el ranking real; con cero filas, `Sin puntuaciones todavía`.
-- [ ] `/jugar/snake` muestra el HUD de la plataforma (`Puntuación`, `Nivel`, sin `Vidas`) y el canvas dentro del marco CRT, sin HUD dibujado en el canvas.
-- [ ] Al entrar, el tablero muestra la serpiente de 3 segmentos y el overlay `PULSA UNA FLECHA`, sin moverse.
-- [ ] La primera flecha inicia la partida en esa dirección.
-- [ ] Con la serpiente en movimiento hacia la derecha, pulsar `←` no la invierte (sin giro de 180°).
-- [ ] Al salir por el borde derecho, la cabeza reaparece por el borde izquierdo en la misma fila (y análogamente en los otros tres bordes).
-- [ ] Chocar con el propio cuerpo termina la partida (`GAME OVER`) y no con los bordes.
-- [ ] Comer una fruta suma exactamente 10 puntos y añade un segmento.
-- [ ] Cada fruta mostrada es uno de los 22 sprites de `FRUIT_SPRITES`, sin deformarse.
-- [ ] Tras 5 frutas el HUD pasa a `Nivel 02` y el tick se acorta 10 ms; el tick nunca baja de 60 ms.
-- [ ] `P` y el botón `PAUSA` pausan y reanudan desde el mismo punto; `P` no hace nada tras el fin de partida.
-- [ ] Al terminar, aparece el overlay de fin y `onGameOver` se llama exactamente una vez (verificable con un `console.log` temporal que se elimina). `FIN` produce lo mismo.
-- [ ] `Enter` y `NUEVA PARTIDA` inician una partida limpia.
-- [ ] Con `score > 0` aparece el formulario; con `score = 0` no.
-- [ ] Guardar con un nombre válido crea una fila en `scores` con `game_id = 'snake'`, nombre sin espacios sobrantes y la puntuación de la partida.
-- [ ] Tras guardar, `/salon` y `/juego/snake` incluyen la puntuación al recargar.
-- [ ] Si la inserción falla, se muestra el error y se puede reintentar sin perder el nombre.
-- [ ] La landing muestra las últimas puntuaciones incluidas las de `snake`.
-- [ ] Con las flechas, `Espacio` o `Enter`, la página no hace scroll; al salir, el bucle se detiene y el scroll vuelve.
-- [ ] Con `reactStrictMode` en `npm run dev`, no hay dos bucles simultáneos.
-- [ ] Los demás juegos (`/jugar/asteroids`, `/jugar/blocks`, `/jugar/rompebloques`) siguen funcionando igual.
-- [ ] En 390 px, `/biblioteca`, `/salon`, `/juego/snake` y `/jugar/snake` no tienen scroll horizontal y el canvas conserva su relación de aspecto.
-- [ ] `grep -rn "service_role" app components lib proxy.ts` no devuelve resultados.
-- [ ] `git status` no muestra cambios en `references/` ni `.env.local`.
+- [OK] `npm run build` termina sin errores.
+- [OK] `npm run lint` termina sin errores nuevos.
+- [OK] `supabase/migrations/` contiene exactamente un archivo nuevo con el SQL de la sección 2.
+- [OK] `npx supabase db push` termina sin error.
+- [OK] La tabla `games` contiene una fila con `id = 'snake'` y las filas previas intactas.
+- [OK] `/biblioteca` muestra la tarjeta `SNAKE` con la portada `.cover-snake`, sin errores en consola.
+- [OK] `/juego/snake` muestra `SNAKE` y el ranking real; con cero filas, `Sin puntuaciones todavía`.
+- [OK] `/jugar/snake` muestra el HUD de la plataforma (`Puntuación`, `Nivel`, sin `Vidas`) y el canvas dentro del marco CRT, sin HUD dibujado en el canvas.
+- [OK] Al entrar, el tablero muestra la serpiente de 3 segmentos y el overlay `PULSA UNA FLECHA`, sin moverse.
+- [OK] La primera flecha inicia la partida en esa dirección.
+- [OK] Con la serpiente en movimiento hacia la derecha, pulsar `←` no la invierte (sin giro de 180°).
+- [OK] Al salir por el borde derecho, la cabeza reaparece por el borde izquierdo en la misma fila (y análogamente en los otros tres bordes).
+- [OK] Chocar con el propio cuerpo termina la partida (`GAME OVER`) y no con los bordes.
+- [OK] Comer una fruta suma exactamente 10 puntos y añade un segmento.
+- [OK] Cada fruta mostrada es uno de los 22 sprites de `FRUIT_SPRITES`, sin deformarse.
+- [OK] Tras 5 frutas el HUD pasa a `Nivel 02` y el tick se acorta 10 ms; el tick nunca baja de 60 ms.
+- [OK] `P` y el botón `PAUSA` pausan y reanudan desde el mismo punto; `P` no hace nada tras el fin de partida.
+- [OK] Al terminar, aparece el overlay de fin y `onGameOver` se llama exactamente una vez (verificable con un `console.log` temporal que se elimina). `FIN` produce lo mismo.
+- [OK] `Enter` y `NUEVA PARTIDA` inician una partida limpia.
+- [OK] Con `score > 0` aparece el formulario; con `score = 0` no.
+- [OK] Guardar con un nombre válido crea una fila en `scores` con `game_id = 'snake'`, nombre sin espacios sobrantes y la puntuación de la partida.
+- [OK] Tras guardar, `/salon` y `/juego/snake` incluyen la puntuación al recargar.
+- [OK] Si la inserción falla, se muestra el error y se puede reintentar sin perder el nombre.
+- [OK] La landing muestra las últimas puntuaciones incluidas las de `snake`.
+- [OK] Con las flechas, `Espacio` o `Enter`, la página no hace scroll; al salir, el bucle se detiene y el scroll vuelve.
+- [OK] Con `reactStrictMode` en `npm run dev`, no hay dos bucles simultáneos.
+- [OK] Los demás juegos (`/jugar/asteroids`, `/jugar/blocks`, `/jugar/rompebloques`) siguen funcionando igual.
+- [OK] En 390 px, `/biblioteca`, `/salon`, `/juego/snake` y `/jugar/snake` no tienen scroll horizontal y el canvas conserva su relación de aspecto.
+- [OK] `grep -rn "service_role" app components lib proxy.ts` no devuelve resultados.
+- [OK] `git status` no muestra cambios en `references/` ni `.env.local`.
 
 ---
 
