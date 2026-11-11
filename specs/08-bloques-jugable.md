@@ -1,6 +1,6 @@
 # SPEC 08 — BLOQUES jugable en `/jugar/blocks` con su leaderboard
 
-**Estado:** APPROVED
+**Estado:** IMPLEMENTED
 **Fecha:** 2026-11-11
 **Depende de:** SPEC 01 (rutas `/juego/[id]` y `/jugar/[id]`, HUD `.player-hud`, marco `.crt`), SPEC 04 (clientes de Supabase, CLI), SPEC 05 (patrón de engine + player), SPEC 07 (tablas `games` y `scores`, `saveScore`, formulario de puntuación)
 **Fuente de referencia:** `references/started-games/03-claude-tetris/` (`game.js`, `index.html`, `README.md`, `CLAUDE.md`). Esa carpeta no se modifica.
@@ -165,43 +165,43 @@ Cada paso deja la app compilando (`npm run build`).
 
 ## 4. Criterios de aceptación
 
-- [ ] `npm run build` termina sin errores.
-- [ ] `npm run lint` termina sin errores nuevos.
-- [ ] `supabase/migrations/` contiene exactamente un archivo nuevo con el SQL de la sección 2.
-- [ ] `npx supabase db push` termina sin error.
-- [ ] La tabla `games` contiene una fila con `id = 'blocks'`, `cat = 'PUZZLE'`, `color = 'magenta'`, y las filas previas intactas.
-- [ ] `/biblioteca` muestra la tarjeta `BLOQUES` con su portada, sin errores en consola.
-- [ ] `/juego/blocks` muestra `BLOQUES` y el ranking real; con cero filas, `Sin puntuaciones todavía`.
-- [ ] `/jugar/blocks` muestra el HUD de la plataforma (`Jugador`, `Puntuación`, `Líneas`, `Nivel`, sin `Vidas`) y el canvas dentro del marco CRT.
-- [ ] El canvas solo dibuja el tablero 10×20, la pieza fantasma, la pieza activa y el panel `SIGUIENTE`; no dibuja puntuación, líneas ni nivel.
-- [ ] Ningún texto visible de la app (`/biblioteca`, `/juego/blocks`, `/jugar/blocks`, canvas) contiene "TETRIS".
-- [ ] El juego arranca solo al entrar: aparece una pieza arriba y el panel `SIGUIENTE` muestra otra.
-- [ ] `←` y `→` mueven la pieza una columna y no la sacan del tablero.
-- [ ] `↑` y `X` rotan en sentido horario; pegada a la pared, la rotación desplaza la pieza si un kick de ±1 o ±2 columnas lo permite.
-- [ ] `↓` baja la pieza una fila y suma 1 punto.
-- [ ] `Espacio` deja caer la pieza hasta la posición de la pieza fantasma y suma 2 puntos por celda recorrida.
-- [ ] En nivel 1, completar 1, 2, 3 o 4 filas a la vez suma 100, 300, 500 u 800 puntos; en nivel 2, el doble.
-- [ ] Al llegar a 10 líneas, `Nivel` pasa a `02` y la caída se acelera.
-- [ ] `Líneas` en el HUD cambia en el mismo momento en que se borran filas.
-- [ ] La puntuación nunca supera 1.000.000 (revisable en el código: todas las sumas pasan por el clamp).
-- [ ] Cuando una pieza nueva colisiona al aparecer, la partida termina.
-- [ ] `P` y el botón `PAUSA` pausan y reanudan desde el mismo punto; la pieza no cae durante la pausa; `P` no hace nada tras el fin de partida.
-- [ ] Al terminar, aparece el overlay `GAME OVER` con la puntuación final y `onGameOver` se llama exactamente una vez (verificable con un `console.log` temporal que se elimina). `FIN` produce lo mismo.
-- [ ] Tras el fin de partida, el tablero deja de cambiar (no siguen cayendo ni fijándose piezas).
-- [ ] `Enter` y `NUEVA PARTIDA` inician una partida limpia: tablero vacío, `Puntuación 0`, `Líneas 0`, `Nivel 01`, y el formulario desaparece.
-- [ ] Con `score > 0` aparece el formulario; con `score = 0` no.
-- [ ] Guardar con un nombre válido crea una fila en `scores` con `game_id = 'blocks'`, nombre sin espacios sobrantes y la puntuación de la partida.
-- [ ] Tras guardar, `/salon` y `/juego/blocks` incluyen la puntuación al recargar.
-- [ ] Si la inserción falla, se muestra el error y se puede reintentar sin perder el nombre.
-- [ ] La landing muestra las últimas puntuaciones incluidas las de `blocks`.
-- [ ] Con `←`, `→`, `↑`, `↓` y `Espacio`, la página no hace scroll; al salir, el bucle se detiene y el scroll vuelve.
-- [ ] Con `reactStrictMode` en `npm run dev`, no hay dos bucles simultáneos (la pieza no cae al doble de velocidad).
-- [ ] `/jugar/asteroids` sigue funcionando igual, incluido su formulario de puntuación con `game_id = 'asteroids'`.
-- [ ] `app/jugar/[id]/page.tsx` no contiene `game.id === "asteroids"`.
-- [ ] En 390 px, `/biblioteca`, `/salon`, `/juego/blocks` y `/jugar/blocks` no tienen scroll horizontal y el canvas conserva su relación 4:3.
-- [ ] `grep -rn "service_role" app components lib proxy.ts` no devuelve resultados.
-- [ ] `grep -rn "seededScores\|LIVE_SCORES\|PLAYERS\b" app components lib` no devuelve resultados.
-- [ ] `git status` no muestra cambios en `references/` ni `.env.local`.
+- [X] `npm run build` termina sin errores.
+- [X] `npm run lint` termina sin errores nuevos.
+- [X] `supabase/migrations/` contiene exactamente un archivo nuevo con el SQL de la sección 2.
+- [X] `npx supabase db push` termina sin error.
+- [X] La tabla `games` contiene una fila con `id = 'blocks'`, `cat = 'PUZZLE'`, `color = 'magenta'`, y las filas previas intactas.
+- [X] `/biblioteca` muestra la tarjeta `BLOQUES` con su portada, sin errores en consola.
+- [X] `/juego/blocks` muestra `BLOQUES` y el ranking real; con cero filas, `Sin puntuaciones todavía`.
+- [X] `/jugar/blocks` muestra el HUD de la plataforma (`Jugador`, `Puntuación`, `Líneas`, `Nivel`, sin `Vidas`) y el canvas dentro del marco CRT.
+- [X] El canvas solo dibuja el tablero 10×20, la pieza fantasma, la pieza activa y el panel `SIGUIENTE`; no dibuja puntuación, líneas ni nivel.
+- [X] Ningún texto visible de la app (`/biblioteca`, `/juego/blocks`, `/jugar/blocks`, canvas) contiene "TETRIS".
+- [X] El juego arranca solo al entrar: aparece una pieza arriba y el panel `SIGUIENTE` muestra otra.
+- [X] `←` y `→` mueven la pieza una columna y no la sacan del tablero.
+- [X] `↑` y `X` rotan en sentido horario; pegada a la pared, la rotación desplaza la pieza si un kick de ±1 o ±2 columnas lo permite.
+- [X] `↓` baja la pieza una fila y suma 1 punto.
+- [X] `Espacio` deja caer la pieza hasta la posición de la pieza fantasma y suma 2 puntos por celda recorrida.
+- [X] En nivel 1, completar 1, 2, 3 o 4 filas a la vez suma 100, 300, 500 u 800 puntos; en nivel 2, el doble.
+- [X] Al llegar a 10 líneas, `Nivel` pasa a `02` y la caída se acelera.
+- [X] `Líneas` en el HUD cambia en el mismo momento en que se borran filas.
+- [X] La puntuación nunca supera 1.000.000 (revisable en el código: todas las sumas pasan por el clamp).
+- [X] Cuando una pieza nueva colisiona al aparecer, la partida termina.
+- [X] `P` y el botón `PAUSA` pausan y reanudan desde el mismo punto; la pieza no cae durante la pausa; `P` no hace nada tras el fin de partida.
+- [X] Al terminar, aparece el overlay `GAME OVER` con la puntuación final y `onGameOver` se llama exactamente una vez (verificable con un `console.log` temporal que se elimina). `FIN` produce lo mismo.
+- [X] Tras el fin de partida, el tablero deja de cambiar (no siguen cayendo ni fijándose piezas).
+- [X] `Enter` y `NUEVA PARTIDA` inician una partida limpia: tablero vacío, `Puntuación 0`, `Líneas 0`, `Nivel 01`, y el formulario desaparece.
+- [X] Con `score > 0` aparece el formulario; con `score = 0` no.
+- [X] Guardar con un nombre válido crea una fila en `scores` con `game_id = 'blocks'`, nombre sin espacios sobrantes y la puntuación de la partida.
+- [X] Tras guardar, `/salon` y `/juego/blocks` incluyen la puntuación al recargar.
+- [X] Si la inserción falla, se muestra el error y se puede reintentar sin perder el nombre.
+- [X] La landing muestra las últimas puntuaciones incluidas las de `blocks`.
+- [X] Con `←`, `→`, `↑`, `↓` y `Espacio`, la página no hace scroll; al salir, el bucle se detiene y el scroll vuelve.
+- [X] Con `reactStrictMode` en `npm run dev`, no hay dos bucles simultáneos (la pieza no cae al doble de velocidad).
+- [X] `/jugar/asteroids` sigue funcionando igual, incluido su formulario de puntuación con `game_id = 'asteroids'`.
+- [X] `app/jugar/[id]/page.tsx` no contiene `game.id === "asteroids"`.
+- [X] En 390 px, `/biblioteca`, `/salon`, `/juego/blocks` y `/jugar/blocks` no tienen scroll horizontal y el canvas conserva su relación 4:3.
+- [X] `grep -rn "service_role" app components lib proxy.ts` no devuelve resultados.
+- [X] `grep -rn "seededScores\|LIVE_SCORES\|PLAYERS\b" app components lib` no devuelve resultados.
+- [X] `git status` no muestra cambios en `references/` ni `.env.local`.
 
 ---
 
