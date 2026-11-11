@@ -108,7 +108,29 @@ function createBlocks(levelIndex: number): Block[] {
   return blocks;
 }
 
-export function createRompebloques(canvas: HTMLCanvasElement) {
+export interface RompebloquesStats {
+  score: number;
+  lives: number;
+  level: number; // 1..3
+}
+
+export interface RompebloquesCallbacks {
+  onStats(stats: RompebloquesStats): void; // on change and at start; never per frame
+  onGameOver(result: { score: number; level: number }): void; // once per game
+  onPauseChange(paused: boolean): void;
+}
+
+export interface RompebloquesController {
+  togglePause(): void; // no effect once the game is over
+  end(): void; // triggers onGameOver
+  restart(): void; // new game
+  destroy(): void; // cancels rAF and listeners; idempotent
+}
+
+export function createRompebloques(
+  canvas: HTMLCanvasElement,
+  callbacks: RompebloquesCallbacks,
+): RompebloquesController {
   canvas.width = CANVAS_W;
   canvas.height = CANVAS_H;
   const ctx = canvas.getContext("2d")!;
@@ -142,6 +164,43 @@ export function createRompebloques(canvas: HTMLCanvasElement) {
 
   const keys = { left: false, right: false };
   let paused = false;
+  let gameOverSent = false;
+  let lastStats: RompebloquesStats | null = null;
+
+  function emitStats() {
+    const next = {
+      score: state.score,
+      lives: state.lives,
+      level: state.level + 1,
+    };
+    const prev = lastStats;
+    if (
+      prev &&
+      prev.score === next.score &&
+      prev.lives === next.lives &&
+      prev.level === next.level
+    ) {
+      return;
+    }
+    lastStats = next;
+    callbacks.onStats(next);
+  }
+
+  // Final stats go out before onGameOver; nothing more until restart().
+  function fireGameOver() {
+    if (gameOverSent) return;
+    emitStats();
+    gameOverSent = true;
+    callbacks.onGameOver({ score: state.score, level: state.level + 1 });
+  }
+
+  function setPaused(value: boolean) {
+    if (paused === value) return;
+    paused = value;
+    lastTime = null; // no time jump on resume
+    if (paused) currentSound?.pause(); // never resumed
+    callbacks.onPauseChange(paused);
+  }
 
   // Sound: one shared channel; a new sound cuts the one playing.
   const sounds = {
@@ -170,8 +229,10 @@ export function createRompebloques(canvas: HTMLCanvasElement) {
   }
 
   function resetGame() {
-    paused = false;
+    setPaused(false);
     lastTime = null;
+    gameOverSent = false;
+    lastStats = null;
     state.phase = "ready";
     state.score = 0;
     state.level = 0;
@@ -180,13 +241,20 @@ export function createRompebloques(canvas: HTMLCanvasElement) {
     state.ball.vx = state.ball.vy = 0;
     state.blocks = createBlocks(state.level);
     state.explosions = [];
+    emitStats();
   }
 
   function togglePause() {
     if (state.phase === "won" || state.phase === "lost") return;
-    paused = !paused;
-    lastTime = null; // no time jump on resume
-    if (paused) currentSound?.pause(); // never resumed
+    setPaused(!paused);
+  }
+
+  function end() {
+    if (gameOverSent) return;
+    setPaused(false);
+    state.phase = "lost";
+    state.ball.vx = state.ball.vy = 0;
+    fireGameOver();
   }
 
   function launch() {
@@ -382,6 +450,7 @@ export function createRompebloques(canvas: HTMLCanvasElement) {
         if (!paused && state.phase === "ready" && !state.started) {
           state.difficulty = DIFFICULTY_KEYS[e.code];
           applyDifficulty();
+          emitStats();
         }
         break;
     }
@@ -477,6 +546,8 @@ export function createRompebloques(canvas: HTMLCanvasElement) {
     if (destroyed) return;
     if (lastTime !== null && !paused) {
       update(Math.min((now - lastTime) / 1000, 0.05)); // dt in s, capped at 50 ms
+      if (state.phase === "won" || state.phase === "lost") fireGameOver();
+      else emitStats();
     }
     lastTime = now;
     draw();
@@ -487,7 +558,12 @@ export function createRompebloques(canvas: HTMLCanvasElement) {
     if (!destroyed) raf = requestAnimationFrame(frame);
   });
 
+  emitStats();
+
   return {
+    togglePause,
+    end,
+    restart: resetGame,
     destroy() {
       destroyed = true;
       cancelAnimationFrame(raf);
