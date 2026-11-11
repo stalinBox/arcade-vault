@@ -1,6 +1,6 @@
 # SPEC 09 — ROMPEBLOQUES jugable en `/jugar/rompebloques` con su leaderboard
 
-**Estado:** APPROVED
+**Estado:** IMPLEMENTED
 **Fecha:** 2026-11-11
 **Depende de:** SPEC 01 (rutas `/juego/[id]` y `/jugar/[id]`, HUD `.player-hud`, marco `.crt`), SPEC 04 (clientes de Supabase, CLI), SPEC 05 (patrón de engine + player), SPEC 07 (tablas `games` y `scores`, `ScoreForm`, `GAME_PLAYERS`)
 **Fuente de referencia:** `references/started-games/04-arkanoid/` (`game.js`, `index.html`, `style.css`, `assets/`, `specs/`). Esa carpeta no se modifica.
@@ -171,45 +171,45 @@ Cada paso deja la app compilando (`npm run build`).
 
 ## 4. Criterios de aceptación
 
-- [ ] `npm run build` termina sin errores.
-- [ ] `npm run lint` termina sin errores nuevos.
-- [ ] `supabase/migrations/` contiene exactamente un archivo nuevo con el SQL de la sección 2.
-- [ ] `npx supabase db push --remote` termina sin error.
-- [ ] La tabla `games` contiene una fila con `id = 'rompebloques'`, `cat = 'ARCADE'`, `color = 'cyan'`, y las filas previas intactas.
-- [ ] `/biblioteca` muestra la tarjeta `ROMPEBLOQUES` con su portada, sin errores en consola.
-- [ ] `/juego/rompebloques` muestra `ROMPEBLOQUES` y el ranking real; con cero filas, `Sin puntuaciones todavía`.
-- [ ] `/jugar/rompebloques` muestra el HUD de la plataforma (`Jugador`, `Puntuación`, `Vidas`, `Nivel`) y el canvas dentro del marco CRT, sin HUD dibujado en el canvas.
-- [ ] Ningún texto visible de la app (`/biblioteca`, `/juego/rompebloques`, `/jugar/rompebloques`, canvas) contiene "ARKANOID".
-- [ ] El juego arranca solo al entrar: aparecen los bloques del mapa 1, la bola pegada a la paleta y el overlay `Pulsa Espacio para lanzar`.
-- [ ] `←` y `→` mueven la paleta y no la sacan del campo.
-- [ ] `Espacio` en `ready` lanza la bola hacia arriba.
-- [ ] Las teclas `1`, `2` y `3` cambian la dificultad solo en `ready` antes del primer lanzamiento; con Fácil la paleta mide 160 px y hay 5 vidas.
-- [ ] Un bloque gris necesita 3 golpes; un rosa, 2; el resto, 1.
-- [ ] Romper un bloque suma 10, 20 o 30 según su dureza; el valor de `Puntuación` cambia en el mismo momento.
-- [ ] Al romper un bloque aparece la animación de explosión de su color.
-- [ ] Un rebote en el borde de la paleta lanza la bola con ángulo máximo de 60° respecto a la vertical.
-- [ ] Si la bola cae por debajo, se pierde una vida, la bola vuelve a `ready` y `Vidas` baja en 1.
-- [ ] Al limpiar el mapa 1 o 2, pasa al siguiente en `ready`, conservando puntos y vidas, y `Nivel` sube a `02` o `03`.
-- [ ] La velocidad de la bola en el mapa 2 es un 10 % mayor que en el mapa 1, y en el mapa 3 un 20 % mayor.
-- [ ] Limpiar el mapa 3 muestra `¡GANASTE!` y llama a `onGameOver` una vez.
-- [ ] Perder la última vida muestra `GAME OVER` con la puntuación final y llama a `onGameOver` una vez (verificable con un `console.log` temporal que se elimina).
-- [ ] `FIN` durante la partida produce el mismo overlay y la misma única llamada a `onGameOver`.
-- [ ] `P` y el botón `PAUSA` pausan y reanudan desde el mismo punto; la bola no se mueve durante la pausa.
-- [ ] `Espacio` no pausa la partida.
-- [ ] `P` no hace nada tras el fin de partida; `PAUSA` está deshabilitado en fin de partida.
-- [ ] `Enter` y `NUEVA PARTIDA` inician una partida limpia: mapa 1, `Puntuación 0`, `Vidas` de la dificultad elegida, `Nivel 01`, y el formulario desaparece.
-- [ ] Con `score > 0` aparece el formulario; con `score = 0` no.
-- [ ] Guardar con un nombre válido crea una fila en `scores` con `game_id = 'rompebloques'`, nombre sin espacios sobrantes y la puntuación de la partida.
-- [ ] Tras guardar, `/salon` y `/juego/rompebloques` incluyen la puntuación al recargar.
-- [ ] Si la inserción falla, se muestra el error y se puede reintentar sin perder el nombre.
-- [ ] La landing muestra las últimas puntuaciones incluidas las de `rompebloques`.
-- [ ] Con `←`, `→`, `Espacio` y `Enter`, la página no hace scroll; al salir, el bucle se detiene y el scroll vuelve.
-- [ ] Con `reactStrictMode` en `npm run dev`, no hay dos bucles simultáneos (la bola no va al doble de velocidad).
-- [ ] Al cambiar de página durante la partida, el sonido se detiene.
-- [ ] Los demás juegos (`/jugar/asteroids`, `/jugar/blocks`, …) siguen funcionando igual.
-- [ ] En 390 px, `/biblioteca`, `/salon`, `/juego/rompebloques` y `/jugar/rompebloques` no tienen scroll horizontal y el canvas conserva su relación 4:3.
-- [ ] `grep -rn "service_role" app components lib proxy.ts` no devuelve resultados.
-- [ ] `git status` no muestra cambios en `references/` ni `.env.local`.
+- [OK] `npm run build` termina sin errores.
+- [OK] `npm run lint` termina sin errores nuevos.
+- [OK] `supabase/migrations/` contiene exactamente un archivo nuevo con el SQL de la sección 2.
+- [OK] `npx supabase db push --remote` termina sin error.
+- [OK] La tabla `games` contiene una fila con `id = 'rompebloques'`, `cat = 'ARCADE'`, `color = 'cyan'`, y las filas previas intactas.
+- [OK] `/biblioteca` muestra la tarjeta `ROMPEBLOQUES` con su portada, sin errores en consola.
+- [OK] `/juego/rompebloques` muestra `ROMPEBLOQUES` y el ranking real; con cero filas, `Sin puntuaciones todavía`.
+- [OK] `/jugar/rompebloques` muestra el HUD de la plataforma (`Jugador`, `Puntuación`, `Vidas`, `Nivel`) y el canvas dentro del marco CRT, sin HUD dibujado en el canvas.
+- [OK] Ningún texto visible de la app (`/biblioteca`, `/juego/rompebloques`, `/jugar/rompebloques`, canvas) contiene "ARKANOID".
+- [OK] El juego arranca solo al entrar: aparecen los bloques del mapa 1, la bola pegada a la paleta y el overlay `Pulsa Espacio para lanzar`.
+- [OK] `←` y `→` mueven la paleta y no la sacan del campo.
+- [OK] `Espacio` en `ready` lanza la bola hacia arriba.
+- [OK] Las teclas `1`, `2` y `3` cambian la dificultad solo en `ready` antes del primer lanzamiento; con Fácil la paleta mide 160 px y hay 5 vidas.
+- [OK] Un bloque gris necesita 3 golpes; un rosa, 2; el resto, 1.
+- [OK] Romper un bloque suma 10, 20 o 30 según su dureza; el valor de `Puntuación` cambia en el mismo momento.
+- [OK] Al romper un bloque aparece la animación de explosión de su color.
+- [OK] Un rebote en el borde de la paleta lanza la bola con ángulo máximo de 60° respecto a la vertical.
+- [OK] Si la bola cae por debajo, se pierde una vida, la bola vuelve a `ready` y `Vidas` baja en 1.
+- [OK] Al limpiar el mapa 1 o 2, pasa al siguiente en `ready`, conservando puntos y vidas, y `Nivel` sube a `02` o `03`.
+- [OK] La velocidad de la bola en el mapa 2 es un 10 % mayor que en el mapa 1, y en el mapa 3 un 20 % mayor.
+- [OK] Limpiar el mapa 3 muestra `¡GANASTE!` y llama a `onGameOver` una vez.
+- [OK] Perder la última vida muestra `GAME OVER` con la puntuación final y llama a `onGameOver` una vez (verificable con un `console.log` temporal que se elimina).
+- [OK] `FIN` durante la partida produce el mismo overlay y la misma única llamada a `onGameOver`.
+- [OK] `P` y el botón `PAUSA` pausan y reanudan desde el mismo punto; la bola no se mueve durante la pausa.
+- [OK] `Espacio` no pausa la partida.
+- [OK] `P` no hace nada tras el fin de partida; `PAUSA` está deshabilitado en fin de partida.
+- [OK] `Enter` y `NUEVA PARTIDA` inician una partida limpia: mapa 1, `Puntuación 0`, `Vidas` de la dificultad elegida, `Nivel 01`, y el formulario desaparece.
+- [OK] Con `score > 0` aparece el formulario; con `score = 0` no.
+- [OK] Guardar con un nombre válido crea una fila en `scores` con `game_id = 'rompebloques'`, nombre sin espacios sobrantes y la puntuación de la partida.
+- [OK] Tras guardar, `/salon` y `/juego/rompebloques` incluyen la puntuación al recargar.
+- [OK] Si la inserción falla, se muestra el error y se puede reintentar sin perder el nombre.
+- [OK] La landing muestra las últimas puntuaciones incluidas las de `rompebloques`.
+- [OK] Con `←`, `→`, `Espacio` y `Enter`, la página no hace scroll; al salir, el bucle se detiene y el scroll vuelve.
+- [OK] Con `reactStrictMode` en `npm run dev`, no hay dos bucles simultáneos (la bola no va al doble de velocidad).
+- [OK] Al cambiar de página durante la partida, el sonido se detiene.
+- [OK] Los demás juegos (`/jugar/asteroids`, `/jugar/blocks`, …) siguen funcionando igual.
+- [OK] En 390 px, `/biblioteca`, `/salon`, `/juego/rompebloques` y `/jugar/rompebloques` no tienen scroll horizontal y el canvas conserva su relación 4:3.
+- [OK] `grep -rn "service_role" app components lib proxy.ts` no devuelve resultados.
+- [OK] `git status` no muestra cambios en `references/` ni `.env.local`.
 
 ---
 
