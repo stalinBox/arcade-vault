@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, type ComponentType } from "react";
 import { AsteroidsPlayer } from "@/components/asteroids-player";
 import { CrtScreen } from "@/components/crt-screen";
 import { getGame, getGameIds } from "@/lib/games";
@@ -8,6 +8,11 @@ import { getGame, getGameIds } from "@/lib/games";
 export async function generateStaticParams() {
   return getGameIds();
 }
+
+// Playable games: id → player component. Ids without an entry show the static CRT placeholder.
+const GAME_PLAYERS: Record<string, ComponentType> = {
+  asteroids: AsteroidsPlayer,
+};
 
 // Fixed HUD values: no game logic in this spec.
 const SCORE = 0;
@@ -31,7 +36,8 @@ async function GamePlayer({
   const game = await getGame(id);
   if (!game) notFound();
 
-  if (game.id === "asteroids") return <AsteroidsPlayer />;
+  const Player = GAME_PLAYERS[game.id];
+  if (Player) return <Player />;
 
   return (
     <div className="av-player fade-in">
