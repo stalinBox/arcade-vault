@@ -440,14 +440,18 @@ a { color: inherit; text-decoration: none; }
 }
 
 .cover-snake { background: linear-gradient(135deg,#003a2a,#0a0a18); }
-.cover-snake::after {
+.cover-snake::before {
   content: "";
   position: absolute; inset: 0;
   background-image:
-    radial-gradient(circle at 70% 50%, var(--magenta) 0 6px, transparent 7px),
-    linear-gradient(90deg, var(--green) 0 40px, transparent 40px) 20% 50% / 200px 12px no-repeat,
-    linear-gradient(90deg, var(--green) 0 12px, transparent 12px) calc(20% + 40px) calc(50% - 12px)/12px 12px no-repeat,
-    linear-gradient(90deg, var(--green) 0 12px, transparent 12px) calc(20% + 28px) calc(50% - 12px)/12px 12px no-repeat;
+    linear-gradient(rgba(0,245,255,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,245,255,0.08) 1px, transparent 1px);
+  background-size: 13.35px 13.35px;
+}
+.cover-snake::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 15' shape-rendering='crispEdges'><g fill='%2300ff88'><rect x='2.06' y='11.06' width='0.88' height='0.88'/><rect x='3.06' y='11.06' width='0.88' height='0.88'/><rect x='4.06' y='11.06' width='0.88' height='0.88'/><rect x='5.06' y='11.06' width='0.88' height='0.88'/><rect x='5.06' y='10.06' width='0.88' height='0.88'/><rect x='5.06' y='9.06' width='0.88' height='0.88'/><rect x='6.06' y='9.06' width='0.88' height='0.88'/><rect x='7.06' y='9.06' width='0.88' height='0.88'/><rect x='8.06' y='9.06' width='0.88' height='0.88'/><rect x='8.06' y='8.06' width='0.88' height='0.88'/><rect x='8.06' y='7.06' width='0.88' height='0.88'/><rect x='9.06' y='7.06' width='0.88' height='0.88'/></g><rect x='10.06' y='7.06' width='0.88' height='0.88' fill='%2300f5ff'/><rect x='10.6' y='7.2' width='0.2' height='0.2' fill='%230a0a18'/><rect x='10.6' y='7.6' width='0.2' height='0.2' fill='%230a0a18'/><rect x='14.45' y='4.6' width='0.1' height='0.3' fill='%2300ff88'/><circle cx='14.5' cy='5.5' r='0.4' fill='%23ff006e'/></svg>") center / 100% auto no-repeat;
   filter: drop-shadow(0 0 6px rgba(0,255,136,0.6));
 }
 

@@ -4,6 +4,7 @@ import { Suspense, type ComponentType } from "react";
 import { AsteroidsPlayer } from "@/components/asteroids-player";
 import { BlocksPlayer } from "@/components/blocks-player";
 import { RompebloquesPlayer } from "@/components/rompebloques-player";
+import { SnakePlayer } from "@/components/snake-player";
 import { CrtScreen } from "@/components/crt-screen";
 import { getGame, getGameIds } from "@/lib/games";
 
@@ -16,6 +17,7 @@ const GAME_PLAYERS: Record<string, ComponentType> = {
   asteroids: AsteroidsPlayer,
   blocks: BlocksPlayer,
   rompebloques: RompebloquesPlayer,
+  snake: SnakePlayer,
 };
 
 // Fixed HUD values: no game logic in this spec.
