@@ -21,7 +21,7 @@
 - Botones `PAUSA` y `FIN` funcionales; tecla `P` alterna pausa.
 - Callback `onGameOver({ score, level })` una vez por partida; overlay `GAME OVER` en el canvas y reinicio con `Enter` o botón `NUEVA PARTIDA`.
 - Overlay `PAUSA` en el canvas mientras está pausado.
-- Fila de `blocks` en `games` mediante migración versionada en `supabase/migrations/` (`npx supabase db push`). Sin tablas nuevas.
+- Fila de `blocks` en `games` mediante migración versionada en `supabase/migrations/` (`npx supabase db push --remote`). Sin tablas nuevas.
 - Portada `.cover-blocks` en `app/globals.css` (base, `::after`, `::before`).
 - Refactor compartido: `ScoreForm` extraído a `components/score-form.tsx` y mapa `id → componente` en `app/jugar/[id]/page.tsx` (ver Plan, paso 1).
 - Formulario de nombre al terminar la partida con `score > 0` (reutiliza `ScoreForm`); guarda en `scores` con `game_id = 'blocks'`.
@@ -149,7 +149,7 @@ Reglas del port:
 Cada paso deja la app compilando (`npm run build`).
 
 0. **Leer docs.** Antes de código de Next, leer en `node_modules/next/dist/docs/` lo relativo a Client Components y `cacheComponents` (regla de `AGENTS.md`).
-1. **Refactor compartido.** Mover `ScoreForm` de `components/asteroids-player.tsx` a `components/score-form.tsx` con props `{ gameId: string; score: number }`; usa `saveScore(gameId, …)` de `lib/scores-client.ts`. Comportamiento idéntico (estados `idle` → `saving` → `saved` | `error`, `router.refresh()`, reintento sin perder el nombre). En `app/jugar/[id]/page.tsx` sustituir `if (game.id === "asteroids")` por `const GAME_PLAYERS: Record<string, ComponentType> = { asteroids: AsteroidsPlayer }`; ids sin player siguen con el `CrtScreen` actual. El nombre no es `PLAYERS` para no chocar con el grep de limpieza de SPEC 07. Asteroides debe comportarse igual.
+1. **Refactor compartido.** Mover `ScoreForm` de `components/asteroids-player.tsx` a `components/score-form.tsx` con props `{ gameId: string; score: number }`; usa `saveScore(gameId, …)` de `lib/scores-client.ts`. Comportamiento idéntico (estados `idle` → `saving` → `saved` | `error`, `router.refresh()`, reintento sin perder el nombre). En `app/jugar/[id]/page.tsx` sustituir `if (game.id === "asteroids")` por `const GAME_PLAYERS: Record<string, ComponentType> = { asteroids: AsteroidsPlayer }`; ids sin player siguen con el `CrtScreen` actual. El nombre no es `PLAYERS` (constante mock eliminada en SPEC 07). Asteroides debe comportarse igual.
 2. **Engine.** Crear `lib/blocks/engine.ts` con las reglas del port: tablero, piezas, colisión, rotación, drops, líneas, nivel, dibujo en 800×600 con panel `SIGUIENTE`. Listeners de `keydown` en `window`; `preventDefault()` en `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Space` y `Enter`. Sin callbacks todavía; prueba manual comparando con `references/started-games/03-claude-tetris/index.html`.
 3. **Callbacks y control.** `onStats` (al iniciar, al sumar puntos, al cambiar líneas o nivel), `onGameOver`, `onPauseChange`, clamp a 1.000.000 y el controlador (`togglePause`, `end`, `restart`, `destroy`). Overlays `PAUSA` y `GAME OVER` en el canvas.
 4. **Player.** `components/blocks-player.tsx`: estado `stats` (`{ score: 0, lines: 0, level: 1 }` inicial), `paused`, `result`; `useEffect` crea y destruye el controlador (StrictMode). Cada `onStats` pone `result` a `null` (el engine no emite `onStats` tras `onGameOver` hasta reiniciar, así `Enter` también limpia el formulario). HUD con las clases existentes: `Jugador` = `INVITADO`, `Puntuación` (`es-ES`), `Líneas`, `Nivel` con dos dígitos. `PAUSA`/`REANUDAR` deshabilitado en fin de partida; `FIN` ↔ `NUEVA PARTIDA`; `blur()` tras pulsar cada botón. `SALIR` a `/juego/blocks`. Barra inferior `BLOQUES · CRT-83 · 60 HZ`. `<ScoreForm gameId="blocks" score={result.score} />` si `result.score > 0`.
@@ -157,7 +157,7 @@ Cada paso deja la app compilando (`npm run build`).
    - Base: `linear-gradient(180deg, #1a0020, #0a0a18)`.
    - `::after`: filas de bloques en la parte inferior con `linear-gradient` en `var(--magenta)`, `var(--cyan)`, `var(--yellow)` y `var(--green)`; la fila superior de la pila tiene un hueco; `drop-shadow` neón.
    - `::before`: pieza T en `var(--magenta)` cayendo en la parte superior, con `text-shadow`/`box-shadow` de glow.
-6. **Migración.** `npx supabase migration new blocks`, pegar el SQL de la sección 2, `npx supabase db push`. Si la CLI no tiene sesión: el usuario ejecuta `! npx supabase login` y se reintenta; alternativa `apply_migration` por MCP con el mismo SQL, dejando el archivo en git.
+6. **Migración.** `npx supabase migration new blocks`, pegar el SQL de la sección 2, `npx supabase db push --remote` (sin `--remote` la CLI apunta al stack local; en modo agente pide confirmación del usuario y se repite con `--yes`). Si la CLI no tiene sesión: el usuario ejecuta `! npx supabase login` y se reintenta; alternativa `apply_migration` por MCP con el mismo SQL, dejando el archivo en git.
 7. **Registro.** Añadir `blocks: BlocksPlayer` a `GAME_PLAYERS`. Comprobar `/biblioteca`, `/juego/blocks`, `/jugar/blocks`.
 8. **Verificación final.** Ver sección 5.
 
@@ -168,7 +168,7 @@ Cada paso deja la app compilando (`npm run build`).
 - [X] `npm run build` termina sin errores.
 - [X] `npm run lint` termina sin errores nuevos.
 - [X] `supabase/migrations/` contiene exactamente un archivo nuevo con el SQL de la sección 2.
-- [X] `npx supabase db push` termina sin error.
+- [X] `npx supabase db push --remote` termina sin error.
 - [X] La tabla `games` contiene una fila con `id = 'blocks'`, `cat = 'PUZZLE'`, `color = 'magenta'`, y las filas previas intactas.
 - [X] `/biblioteca` muestra la tarjeta `BLOQUES` con su portada, sin errores en consola.
 - [X] `/juego/blocks` muestra `BLOQUES` y el ranking real; con cero filas, `Sin puntuaciones todavía`.
@@ -200,7 +200,7 @@ Cada paso deja la app compilando (`npm run build`).
 - [X] `app/jugar/[id]/page.tsx` no contiene `game.id === "asteroids"`.
 - [X] En 390 px, `/biblioteca`, `/salon`, `/juego/blocks` y `/jugar/blocks` no tienen scroll horizontal y el canvas conserva su relación 4:3.
 - [X] `grep -rn "service_role" app components lib proxy.ts` no devuelve resultados.
-- [X] `grep -rn "seededScores\|LIVE_SCORES\|PLAYERS\b" app components lib` no devuelve resultados.
+- [X] `grep -rn "seededScores\|LIVE_SCORES\|\bPLAYERS\b" app components lib` no devuelve resultados.
 - [X] `git status` no muestra cambios en `references/` ni `.env.local`.
 
 ---
@@ -210,7 +210,7 @@ Cada paso deja la app compilando (`npm run build`).
 No hay test runner. Verificación por:
 
 1. `npm run build` y `npm run lint`.
-2. `npx supabase db push` y `mcp__supabase__list_tables` (verbose) para confirmar la fila.
+2. `npx supabase db push --remote` y `mcp__supabase__list_tables` (verbose) para confirmar la fila.
 3. `npm run dev`: partida completa en `/jugar/blocks` recorriendo la sección 4; comparar con `references/started-games/03-claude-tetris/index.html` abierto en otra pestaña (velocidad de caída, puntos, wall kicks).
 4. Partida real: terminar con puntuación > 0, guardar con nombre, comprobar la fila en el panel y el ranking. Las filas de prueba se borran desde el panel de Supabase, nunca desde el código.
 5. Partida real de Asteroides con puntuación > 0 y guardado, para confirmar el refactor de `ScoreForm`.
@@ -225,7 +225,7 @@ No hay test runner. Verificación por:
 - **Catálogo en la tabla `games`** (SPEC 07). Una fila por juego, vía migración. Descartado: constantes en código.
 - **Escritura directa desde el navegador con RLS** (SPEC 07). Sin `service_role`.
 - **`ScoreForm` y mapa de players compartidos** (elegido). Hoy `ScoreForm` vive dentro de `asteroids-player.tsx` y la página elige el player con un `if`. Extraerlos evita duplicar el formulario y una rama `if` por juego. Descartado: copiar `ScoreForm` en `blocks-player.tsx`.
-- **Mapa llamado `GAME_PLAYERS`** (elegido). `PLAYERS` choca con el grep de limpieza de datos mock de SPEC 07.
+- **Mapa llamado `GAME_PLAYERS`** (elegido). Evita reutilizar `PLAYERS`, la constante mock que eliminó SPEC 07. El grep de limpieza usa `\bPLAYERS\b` para no confundir `GAME_PLAYERS` con ella (decidido en la verificación: el grep original `PLAYERS\b` sí coincidía). Descartado: renombrar el mapa.
 - **Título `BLOQUES`, id `blocks`** (elegido por el usuario tras descartar "TETRIS"). El usuario pidió primero conservar "TETRIS". Se descartó porque es la marca de un juego concreto; las mecánicas de género se mantienen. Descartados: `stack`/`APILA`, `falling-blocks`/`CAÍDA LIBRE`.
 - **`PUZZLE` + `magenta`** (elegido). Asteroides usa `yellow`; el color diferencia la tarjeta. Descartados: `cyan`, `green`.
 - **Port tal cual** (elegido por el usuario). Piezas, kicks, ghost, puntos y velocidad idénticos a `game.js`. Descartado: quitar pieza fantasma o puntos de drop.
