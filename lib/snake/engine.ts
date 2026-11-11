@@ -1,4 +1,4 @@
-import { FRUIT_SPRITES, type FruitName } from "./sprites";
+import { FRUIT_SPRITES, FRUITS_SHEET_URL, type FruitName } from "./sprites";
 
 export const COLS = 20;
 export const ROWS = 20;
@@ -94,6 +94,11 @@ function placeFood(snake: Cell[], random: Random): Food | null {
   return { ...cell, fruit };
 }
 
+// Separate function so callers keep the wide Status type (no narrowing to "playing").
+function isOver(state: SnakeState): boolean {
+  return state.status === "lost" || state.status === "won";
+}
+
 export function levelOf(state: SnakeState): number {
   return Math.floor(state.foodsEaten / FRUITS_PER_LEVEL) + 1;
 }
@@ -158,11 +163,16 @@ const COLOR = {
 
 const MONO = "monospace";
 
-function overlayFor(status: Status, paused: boolean): { title: string; sub: string } | null {
+function overlayFor(
+  status: Status,
+  paused: boolean,
+): { title: string; sub: string } | null {
   if (paused) return { title: "PAUSA", sub: "Pulsa P para reanudar" };
   if (status === "ready") return { title: "PULSA UNA FLECHA", sub: "" };
-  if (status === "lost") return { title: "GAME OVER", sub: "Enter para reiniciar" };
-  if (status === "won") return { title: "¡GANASTE!", sub: "Enter para reiniciar" };
+  if (status === "lost")
+    return { title: "GAME OVER", sub: "Enter para reiniciar" };
+  if (status === "won")
+    return { title: "¡GANASTE!", sub: "Enter para reiniciar" };
   return null;
 }
 
@@ -198,7 +208,11 @@ function drawFood(
   );
 }
 
-function drawOverlay(ctx: CanvasRenderingContext2D, title: string, sub: string): void {
+function drawOverlay(
+  ctx: CanvasRenderingContext2D,
+  title: string,
+  sub: string,
+): void {
   const center = CANVAS_SIZE / 2;
   ctx.fillStyle = COLOR.veil;
   ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
@@ -249,4 +263,184 @@ export function drawBoard(
 
   const message = overlayFor(state.status, paused);
   if (message) drawOverlay(ctx, message.title, message.sub);
+}
+
+export interface SnakeStats {
+  score: number;
+  level: number;
+}
+
+export interface SnakeCallbacks {
+  onStats(stats: SnakeStats): void; // on start and on change; never per frame
+  onGameOver(result: SnakeStats): void; // once per match
+  onPauseChange(paused: boolean): void;
+}
+
+export interface SnakeController {
+  togglePause(): void; // no effect before the first move or after the match ends
+  end(): void; // FIN button: ends the match now
+  restart(): void;
+  destroy(): void; // stops the loop and listeners; idempotent
+}
+
+const MAX_FRAME_MS = 50;
+
+const KEY_DIRS: Record<string, Dir> = {
+  ArrowUp: "up",
+  ArrowDown: "down",
+  ArrowLeft: "left",
+  ArrowRight: "right",
+};
+
+// Keys typed into form fields or focused controls belong to them, not to the game.
+function ignoresKeys(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el) return false;
+  if (el.isContentEditable) return true;
+  return ["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A"].includes(el.tagName);
+}
+
+export function createSnake(
+  canvas: HTMLCanvasElement,
+  callbacks: SnakeCallbacks,
+): SnakeController {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("2D canvas context unavailable");
+  canvas.width = CANVAS_SIZE;
+  canvas.height = CANVAS_SIZE;
+
+  let state = createState(Math.random);
+  let paused = false;
+  let finished = false;
+  let destroyed = false;
+  let acc = 0;
+  let last: number | null = null;
+  let rafId = 0;
+  let reported: string | null = null;
+  let sheet: HTMLImageElement | null = null;
+
+  function emitStats(): void {
+    const stats = { score: scoreOf(state), level: levelOf(state) };
+    const key = `${stats.score}:${stats.level}`;
+    if (key === reported) return;
+    reported = key;
+    callbacks.onStats(stats);
+  }
+
+  function finish(): void {
+    if (finished) return;
+    finished = true;
+    if (paused) {
+      paused = false;
+      callbacks.onPauseChange(false);
+    }
+    emitStats();
+    callbacks.onGameOver({ score: scoreOf(state), level: levelOf(state) });
+  }
+
+  function frame(now: number): void {
+    if (destroyed) return;
+    rafId = requestAnimationFrame(frame);
+    if (last === null) last = now;
+    const elapsed = Math.min(now - last, MAX_FRAME_MS);
+    last = now;
+
+    if (!paused && state.status === "playing") {
+      acc += elapsed;
+      let interval = tickIntervalMs(state);
+      while (acc >= interval && state.status === "playing") {
+        acc -= interval;
+        tick(state, Math.random);
+        interval = tickIntervalMs(state);
+      }
+      emitStats();
+      if (isOver(state)) finish();
+    }
+
+    drawBoard(ctx!, state, paused, sheet);
+  }
+
+  function startLoop(): void {
+    if (!destroyed) rafId = requestAnimationFrame(frame);
+  }
+
+  // The loop starts once fruits.png has loaded or failed; a failure draws the fallback circle.
+  const image = new Image();
+  image.onload = () => {
+    if (destroyed) return;
+    sheet = image;
+    startLoop();
+  };
+  image.onerror = () => {
+    if (destroyed) return;
+    sheet = null;
+    startLoop();
+  };
+  image.src = FRUITS_SHEET_URL;
+
+  function togglePause(): void {
+    if (destroyed || finished || state.status !== "playing") return;
+    paused = !paused;
+    if (paused) {
+      state.pendingDir = null;
+      acc = 0;
+    }
+    callbacks.onPauseChange(paused);
+  }
+
+  function end(): void {
+    if (destroyed || finished) return;
+    if (state.status === "ready" || state.status === "playing")
+      state.status = "lost";
+    finish();
+  }
+
+  function restart(): void {
+    if (destroyed) return;
+    state = createState(Math.random);
+    paused = false;
+    finished = false;
+    acc = 0;
+    last = null;
+    reported = null;
+    emitStats();
+  }
+
+  function onKeyDown(e: KeyboardEvent): void {
+    if (destroyed || ignoresKeys(e.target)) return;
+
+    const dir = KEY_DIRS[e.key];
+    if (dir) {
+      e.preventDefault();
+      queueDirection(state, dir);
+      return;
+    }
+    if (e.key === " ") {
+      e.preventDefault();
+      return;
+    }
+    if (e.key === "p" || e.key === "P") {
+      if (!e.repeat) togglePause();
+      return;
+    }
+    if (e.key === "Enter" && finished) {
+      e.preventDefault();
+      restart();
+    }
+  }
+
+  window.addEventListener("keydown", onKeyDown);
+  emitStats();
+
+  return {
+    togglePause,
+    end,
+    restart,
+    destroy(): void {
+      if (destroyed) return;
+      destroyed = true;
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("keydown", onKeyDown);
+    },
+  };
 }
