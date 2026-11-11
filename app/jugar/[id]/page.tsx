@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense, type ComponentType } from "react";
 import { AsteroidsPlayer } from "@/components/asteroids-player";
+import { BlocksPlayer } from "@/components/blocks-player";
 import { CrtScreen } from "@/components/crt-screen";
 import { getGame, getGameIds } from "@/lib/games";
 
@@ -12,6 +13,7 @@ export async function generateStaticParams() {
 // Playable games: id → player component. Ids without an entry show the static CRT placeholder.
 const GAME_PLAYERS: Record<string, ComponentType> = {
   asteroids: AsteroidsPlayer,
+  blocks: BlocksPlayer,
 };
 
 // Fixed HUD values: no game logic in this spec.
