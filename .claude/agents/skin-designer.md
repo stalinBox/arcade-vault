@@ -55,7 +55,7 @@ Compliance is derived from the code every run; do not keep a separate status fil
 ### Engine
 
 - Signature becomes `create<Game>(canvas, callbacks, { skin, mode })` (options optional, default `classic` / `dark`).
-- Controller gains `setSkin(skin: SkinId, mode: ColorMode)`: swaps the palette in place, never restarts or alters the match.
+- Controller gains `setSkin(skin: SkinId, mode: ColorMode)`: swaps the palette in place, never restarts or alters the match. 
 - No color literals left in the engine: everything reads from the active `Palette`. State stays in the closure.
 - Sprite games (`snake`, `rompebloques`): `classic` keeps the PNG sprites as they are. `neon`/`retro` may draw shapes on canvas or apply `ctx.filter` to sprites. No new assets unless strictly needed (then in `public/games/<slug>/`).
 
