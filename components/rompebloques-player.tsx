@@ -8,6 +8,8 @@ import {
   type RompebloquesStats,
 } from "@/lib/rompebloques/engine";
 import { ScoreForm } from "@/components/score-form";
+import { SkinPicker } from "@/components/skin-picker";
+import { useColorMode, useSkin } from "@/lib/skins";
 
 // Normal difficulty: 3 lives.
 const INITIAL_STATS: RompebloquesStats = { score: 0, lives: 3, level: 1 };
@@ -20,20 +22,34 @@ export function RompebloquesPlayer() {
   const [result, setResult] = useState<{ score: number; level: number } | null>(
     null,
   );
+  const [skin, setSkin] = useSkin("rompebloques");
+  const mode = useColorMode();
+  // Latest look, read once when the game is created below.
+  const lookRef = useRef({ skin, mode });
+
+  // Declared before the create effect so the first create sees the current look.
+  useEffect(() => {
+    lookRef.current = { skin, mode };
+    gameRef.current?.setSkin(skin, mode);
+  }, [skin, mode]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const game = createRompebloques(canvas, {
-      onStats(next) {
-        setStats(next);
-        // The engine emits no stats after onGameOver until a new game starts,
-        // so this also clears the form on restarts via Enter or Space.
-        setResult(null);
+    const game = createRompebloques(
+      canvas,
+      {
+        onStats(next) {
+          setStats(next);
+          // The engine emits no stats after onGameOver until a new game starts,
+          // so this also clears the form on restarts via Enter or Space.
+          setResult(null);
+        },
+        onGameOver: setResult,
+        onPauseChange: setPaused,
       },
-      onGameOver: setResult,
-      onPauseChange: setPaused,
-    });
+      lookRef.current,
+    );
     gameRef.current = game;
     return () => {
       game.destroy();
@@ -80,6 +96,7 @@ export function RompebloquesPlayer() {
             <div className="v">{String(stats.level).padStart(2, "0")}</div>
           </div>
         </div>
+        <SkinPicker value={skin} onChange={setSkin} />
         <div className="hud-actions">
           <button
             type="button"
