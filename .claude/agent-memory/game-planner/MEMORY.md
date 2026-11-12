@@ -15,4 +15,4 @@ Ports pendientes en `references/started-games/`: ninguno (02-asteroids, 03-claud
 
 ## Preferencias aprendidas del usuario
 
-(sin datos aún; primera tanda propuesta 2026-11-12: paddle-duel, tile-merge, alien-wave)
+(sin datos aún; tandas 2026-11-12: paddle-duel, tile-merge, alien-wave + 20 juegos en paralelo, 5 por categoría)
