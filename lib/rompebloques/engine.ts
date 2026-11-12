@@ -1,6 +1,15 @@
 // Port of references/started-games/04-arkanoid/game.js.
 // Same rules as the reference. Logic field is 640x640; it is drawn into a fixed
 // 800x600 canvas (scaled by CSS) with the field scaled to 600 px and centered.
+// Colors come from the active skin palette (lib/rompebloques/skins.ts).
+
+import {
+  DEFAULT_COLOR_MODE,
+  DEFAULT_SKIN,
+  type ColorMode,
+  type SkinId,
+} from "@/lib/skins";
+import { SKIN_PALETTES, type Palette } from "./skins";
 
 import {
   EXPLOSION_DURATION,
@@ -125,15 +134,24 @@ export interface RompebloquesController {
   end(): void; // triggers onGameOver
   restart(): void; // new game
   destroy(): void; // cancels rAF and listeners; idempotent
+  /** Swaps the palette in place; the match is untouched. */
+  setSkin(skin: SkinId, mode: ColorMode): void;
+}
+
+export interface RompebloquesOptions {
+  skin?: SkinId;
+  mode?: ColorMode;
 }
 
 export function createRompebloques(
   canvas: HTMLCanvasElement,
   callbacks: RompebloquesCallbacks,
+  { skin = DEFAULT_SKIN, mode = DEFAULT_COLOR_MODE }: RompebloquesOptions = {},
 ): RompebloquesController {
   canvas.width = CANVAS_W;
   canvas.height = CANVAS_H;
   const ctx = canvas.getContext("2d")!;
+  let palette: Palette = SKIN_PALETTES[skin][mode];
 
   const normal = DIFFICULTIES.normal;
   const state = {
@@ -462,40 +480,46 @@ export function createRompebloques(
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("keyup", onKeyUp);
 
+  /** Glow for the next draw calls; a palette with glow 0 turns it off. */
+  function setGlow(color: string) {
+    ctx.shadowBlur = palette.glow;
+    ctx.shadowColor = color;
+  }
+
   function drawOverlay(title: string, sub?: string, veil = false) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     if (veil) {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillStyle = palette.veil;
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
     }
-    ctx.fillStyle = "#fff";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    ctx.fillStyle = palette.title;
+    setGlow(palette.title);
     ctx.font = "48px monospace";
     ctx.fillText(title, CANVAS_W / 2, CANVAS_H / 2);
+    ctx.shadowBlur = 0;
     if (sub) {
+      ctx.fillStyle = palette.text;
       ctx.font = "20px monospace";
       ctx.fillText(sub, CANVAS_W / 2, CANVAS_H / 2 + 48);
     }
   }
 
-  function draw() {
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle = "#1b1b2f";
-    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  // ── Sprite mode (classic) ──────────────────────────────────────────────────
+  function outlineRect(x: number, y: number, w: number, h: number) {
+    if (!palette.spriteOutline) return;
+    ctx.strokeStyle = palette.spriteOutline;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+  }
 
-    // Field: 640x640 logic units -> 600 px, centered horizontally.
-    ctx.setTransform(FIELD_SCALE, 0, 0, FIELD_SCALE, FIELD_OFFSET_X, 0);
-
+  function drawSpriteScene() {
     for (const k of state.blocks) {
-      drawSprite(
-        ctx,
-        `block_${k.color}`,
-        k.col * BLOCK.w,
-        BLOCK.top + k.row * BLOCK.h,
-        BLOCK.w,
-        BLOCK.h,
-      );
+      const x = k.col * BLOCK.w;
+      const y = BLOCK.top + k.row * BLOCK.h;
+      drawSprite(ctx, `block_${k.color}`, x, y, BLOCK.w, BLOCK.h);
+      outlineRect(x, y, BLOCK.w, BLOCK.h);
     }
 
     for (const e of state.explosions) {
@@ -504,22 +528,136 @@ export function createRompebloques(
         frames.length - 1,
         Math.floor((e.t / EXPLOSION_DURATION) * frames.length),
       );
-      if (e.color === "gray") ctx.filter = "grayscale(1)";
+      if (e.color === "gray") ctx.filter = palette.grayFilter;
       drawFrame(ctx, frames[i], e.x, e.y, BLOCK.w, BLOCK.h);
       if (e.color === "gray") ctx.filter = "none";
     }
 
     const p = state.paddle;
     drawSprite(ctx, "paddle", p.x, p.y, p.w, p.h);
+    outlineRect(p.x, p.y, p.w, p.h);
 
     const b = state.ball;
     drawSprite(ctx, "ball", b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+    if (palette.spriteOutline) {
+      ctx.strokeStyle = palette.spriteOutline;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  // ── Shape mode (neon / retro) ──────────────────────────────────────────────
+  function drawShapeScene() {
+    const pal = palette;
+    const gap = pal.pixel ? 4 : 3;
+
+    for (const k of state.blocks) {
+      const x = k.col * BLOCK.w + gap;
+      const y = BLOCK.top + k.row * BLOCK.h + gap;
+      const w = BLOCK.w - gap * 2;
+      const h = BLOCK.h - gap * 2;
+      const color = pal.blocks[k.color];
+      setGlow(color);
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+      ctx.shadowBlur = 0;
+      if (pal.blockShade) {
+        ctx.fillStyle = pal.blockShade;
+        ctx.fillRect(x, y + h - 6, w, 6);
+      }
+      // Multi-hit blocks: one notch per hit left beyond the last.
+      if (pal.pixel && k.maxHp > 1) {
+        ctx.fillStyle = pal.field;
+        for (let n = 0; n < k.hp - 1; n++) {
+          ctx.fillRect(x + 6 + n * 12, y + h / 2 - 3, 6, 6);
+        }
+      }
+    }
+
+    for (const e of state.explosions) {
+      const t = e.t / EXPLOSION_DURATION;
+      const grow = t * 12;
+      const color = pal.blocks[e.color];
+      ctx.globalAlpha = 1 - t;
+      setGlow(color);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = pal.pixel ? 4 : 2;
+      ctx.strokeRect(
+        e.x + gap - grow,
+        e.y + gap - grow / 2,
+        BLOCK.w - gap * 2 + grow * 2,
+        BLOCK.h - gap * 2 + grow,
+      );
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+    }
+
+    const p = state.paddle;
+    const cap = Math.min(16, p.w / 6);
+    setGlow(pal.paddle);
+    ctx.fillStyle = pal.paddle;
+    if (pal.pixel) {
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+    } else {
+      ctx.beginPath();
+      ctx.roundRect(p.x, p.y, p.w, p.h, p.h / 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = pal.paddleCap;
+    if (pal.pixel) {
+      ctx.fillRect(p.x, p.y, cap, p.h);
+      ctx.fillRect(p.x + p.w - cap, p.y, cap, p.h);
+    } else {
+      ctx.beginPath();
+      ctx.roundRect(p.x, p.y, cap, p.h, [p.h / 2, 0, 0, p.h / 2]);
+      ctx.roundRect(p.x + p.w - cap, p.y, cap, p.h, [0, p.h / 2, p.h / 2, 0]);
+      ctx.fill();
+    }
+
+    const b = state.ball;
+    setGlow(pal.ball);
+    ctx.fillStyle = pal.ball;
+    if (pal.pixel) {
+      ctx.fillRect(b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+    } else {
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  function draw() {
+    const pal = palette;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = pal.board;
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    if (pal.field !== pal.board) {
+      ctx.fillStyle = pal.field;
+      ctx.fillRect(FIELD_OFFSET_X, 0, CANVAS_H, CANVAS_H);
+    }
+    if (pal.fieldEdge) {
+      setGlow(pal.fieldEdge);
+      ctx.strokeStyle = pal.fieldEdge;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(FIELD_OFFSET_X - 1, -2, CANVAS_H + 2, CANVAS_H + 4);
+      ctx.shadowBlur = 0;
+    }
+
+    // Field: 640x640 logic units -> 600 px, centered horizontally.
+    ctx.setTransform(FIELD_SCALE, 0, 0, FIELD_SCALE, FIELD_OFFSET_X, 0);
+    if (pal.sprites) drawSpriteScene();
+    else drawShapeScene();
 
     if (paused) {
       drawOverlay("PAUSA", undefined, true);
     } else if (state.phase === "ready") {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.fillStyle = "#fff";
+      ctx.fillStyle = pal.text;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = "24px monospace";
@@ -570,6 +708,9 @@ export function createRompebloques(
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
       currentSound?.pause();
+    },
+    setSkin(nextSkin, nextMode) {
+      palette = SKIN_PALETTES[nextSkin][nextMode];
     },
   };
 }

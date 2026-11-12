@@ -32,6 +32,15 @@ Skills live in `.agents/skills/` and are symlinked into `.claude/skills/`. `skil
 - `/spec-impl <NN-slug>` — implements a spec whose state is `Aprobado`: creates branch `spec-NN-slug` (`AutoCreateBranch` in `specs/.spec-config.yml`), goes step by step with pauses, never commits on its own.
 - `/add-game <slug | reference folder | idea>` — `/spec` specialised for one new game with its leaderboard. Uses `.agents/skills/add-game/template.md`. Only writes the spec.
 
+## Agents
+
+Subagents live in `.claude/agents/`.
+
+- `game-planner` — plans and decides which new game fits the platform (proposes only, never writes specs or code). Persistent memory in `.claude/agent-memory/game-planner/` (`memory: project`, versioned); keeps the human To-Do `references/games-suggestions-todo.md` updated. Next step after a proposal: `/add-game <slug>`.
+  - Invoke as `@game-planner` or via the Agent tool; a new agent file is only registered after restarting the session.
+  - Parallel runs (e.g. one per category): tell each to NOT write files, then consolidate `suggestions.md`, `MEMORY.md` and the To-Do once. Concurrent writes to the shared memory collide.
+- `skin-designer` — audits and implements per-game skins `classic` (default) / `neon` / `retro`, legible in dark and light mode (global `data-theme` toggle). Modes: `audit` (read-only), `<slug>`, `all`, `theme`. Writes code; never commits. Contract (`lib/skins.ts`, `lib/<slug>/skins.ts`, `setSkin` on the controller) lives in `.claude/agents/skin-designer.md`.
+
 ## Spec-driven workflow
 
 Every feature starts as a spec in `specs/` (Spanish, header `**Estado:**` / `**Fecha:**` / `**Depende de:**` / `**Objetivo:**`). The human moves the state from `Borrador` to `Aprobado`; after the acceptance criteria pass it becomes `IMPLEMENTED`. One branch and one PR per spec. Specs 01–10 are implemented; read the latest game spec before touching the game pattern.
@@ -42,15 +51,15 @@ Arcade Vault is a retro game portal: players play canvas games as guests and sav
 
 ### Routes (`app/`)
 
-| Route         | Content                                                                                          |
-| ------------- | ------------------------------------------------------------------------------------------------ |
-| `/inicio`     | Landing: catalog, latest scores, top scores                                                      |
-| `/biblioteca` | Game library with category filter (see `references/implemented-games.md`) when you need to check which games are implemented and add more games.                                                              |
-| `/juego/[id]` | Game detail + top 10                                                                             |
-| `/jugar/[id]` | Player. `GAME_PLAYERS` maps `id → component`; ids without an entry show a static CRT placeholder |
-| `/salon`      | Hall of fame, top 12 per game                                                                    |
-| `/acerca`     | About + contact form (server action `sendContact`, Resend)                                       |
-| `/auth`       | Visual-only login/signup form. Real auth does not exist yet                                      |
+| Route         | Content                                                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/inicio`     | Landing: catalog, latest scores, top scores                                                                                                      |
+| `/biblioteca` | Game library with category filter (see `references/implemented-games.md`) when you need to check which games are implemented and add more games. |
+| `/juego/[id]` | Game detail + top 10                                                                                                                             |
+| `/jugar/[id]` | Player. `GAME_PLAYERS` maps `id → component`; ids without an entry show a static CRT placeholder                                                 |
+| `/salon`      | Hall of fame, top 12 per game                                                                                                                    |
+| `/acerca`     | About + contact form (server action `sendContact`, Resend)                                                                                       |
+| `/auth`       | Visual-only login/signup form. Real auth does not exist yet                                                                                      |
 
 `app/layout.tsx` wraps every page with `Nav` and `Footer` and loads the fonts (Press Start 2P, JetBrains Mono, Courier Prime).
 
@@ -67,12 +76,13 @@ Pages are thin: a sync default export renders `<Suspense>` around an async loade
 
 Four playable games: `asteroids`, `blocks`, `rompebloques`, `snake`. Each one has the same pieces:
 
-1. `lib/<slug>/engine.ts` — no global DOM access. `create<Game>(canvas, callbacks)` returns a controller (`togglePause`, `restart`, `end`, `destroy`). State lives in the closure, not in module variables. Callbacks: `onStats`, `onGameOver`, `onPauseChange`. Optional `sprites.ts` for sprite atlases.
-2. `components/<slug>-player.tsx` — client component: platform HUD (`.player-hud`), canvas inside `.crt.crt-game`, and `ScoreForm` when the match ends with `score > 0`. `destroy()` on unmount clears rAF and listeners.
-3. A migration that inserts the row in `games` (`on conflict (id) do nothing`). No new tables.
-4. `.cover-<slug>` in `app/globals.css` (base, `::before`, `::after`), pure CSS cover art.
-5. An entry in `GAME_PLAYERS` in `app/jugar/[id]/page.tsx`.
-6. Assets in `public/games/<slug>/`.
+1. `lib/<slug>/engine.ts` — no global DOM access. `create<Game>(canvas, callbacks, { skin, mode }?)` returns a controller (`togglePause`, `restart`, `end`, `destroy`, `setSkin(skin, mode)`). `setSkin` swaps the palette in place without touching the match. State lives in the closure, not in module variables. No color literals: every color comes from the active palette. Callbacks: `onStats`, `onGameOver`, `onPauseChange`. Optional `sprites.ts` for sprite atlases.
+2. `lib/<slug>/skins.ts` — `Palette` type and `SKIN_PALETTES: Record<SkinId, Record<ColorMode, Palette>>` for skins `classic` (default, the original look) / `neon` / `retro`, each in `dark` and `light`. Shared types and hooks (`useSkin(gameId)`, `useColorMode()`, `SKINS`) live in `lib/skins.ts`. Contract and contrast rules: `.claude/agents/skin-designer.md`.
+3. `components/<slug>-player.tsx` — client component: platform HUD (`.player-hud`) with `<SkinPicker>` (`components/skin-picker.tsx`, persisted in `av:skin:<slug>`), canvas inside `.crt.crt-game`, and `ScoreForm` when the match ends with `score > 0`. Calls `game.setSkin(skin, mode)` when skin or color mode changes. `destroy()` on unmount clears rAF and listeners.
+4. A migration that inserts the row in `games` (`on conflict (id) do nothing`). No new tables.
+5. `.cover-<slug>` in `app/globals.css` (base, `::before`, `::after`), pure CSS cover art.
+6. An entry in `GAME_PLAYERS` in `app/jugar/[id]/page.tsx`.
+7. Assets in `public/games/<slug>/`.
 
 Library, detail, hall of fame and landing read `games`/`scores`, so a new game shows up there with no extra code.
 
@@ -80,7 +90,9 @@ Library, detail, hall of fame and landing read `games`/`scores`, so a new game s
 
 Tailwind v4 is imported in `app/globals.css`, but almost all UI uses the hand-written classes defined there (theme variables in `:root`, `.btn`, `.crt`, `.player-hud`, `.cover-*`, one section per screen). Reuse those classes before adding utilities.
 
+Light/dark: `data-theme="dark" | "light"` on `<html>` (default `dark`, persisted in `localStorage` key `av:theme`). An inline script in `app/layout.tsx` applies it before paint; the toggle lives in `components/nav.tsx`. `:root[data-theme="light"]` in `app/globals.css` redefines the tokens; `.crt`, card covers and the terminal stay dark in both modes (dark tokens re-declared on them). Fix light-mode issues with tokens, not utilities.
+
 ### Other directories
 
-- `references/` — read-only source material: `started-games/` (original JS games that were ported), `templates/` (the original visual design in JSX/CSS), `source-assets/`. Never modify it.
+- `references/` — read-only source material: `started-games/` (original JS games that were ported), `templates/` (the original visual design in JSX/CSS), `source-assets/`. Never modify it, except `games-suggestions-todo.md`, which the `game-planner` agent maintains.
 - `demos/` — scratch component, not used by the app.

@@ -1,5 +1,14 @@
 // Port of references/started-games/02-asteroids/game.js.
 // No DOM access outside createAsteroids(); all game state lives in its closure.
+// Colors come from the active skin palette (lib/asteroids/skins.ts).
+
+import {
+  DEFAULT_COLOR_MODE,
+  DEFAULT_SKIN,
+  type ColorMode,
+  type SkinId,
+} from "@/lib/skins";
+import { SKIN_PALETTES, type Palette } from "./skins";
 
 const W = 800;
 const H = 600;
@@ -16,6 +25,12 @@ const wrap = (v: number, max: number) => ((v % max) + max) % max;
 const dist = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
 const randInt = (min: number, max: number) => Math.floor(rand(min, max + 1));
+
+/** Glow for the next draw calls; a palette with glow 0 turns it off. */
+function setGlow(ctx: CanvasRenderingContext2D, pal: Palette, color: string) {
+  ctx.shadowBlur = pal.glow;
+  ctx.shadowColor = color;
+}
 
 // ── Bullet ────────────────────────────────────────────────────────────────────
 class Bullet {
@@ -42,8 +57,19 @@ class Bullet {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = "#fff";
+  draw(ctx: CanvasRenderingContext2D, pal: Palette) {
+    ctx.fillStyle = pal.bullet;
+    setGlow(ctx, pal, pal.bullet);
+    if (pal.pixel) {
+      const s = this.radius * 2;
+      ctx.fillRect(
+        Math.round(this.x - this.radius),
+        Math.round(this.y - this.radius),
+        s,
+        s,
+      );
+      return;
+    }
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -99,18 +125,24 @@ class Asteroid {
     ];
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, pal: Palette) {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rot);
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 1.5;
-    ctx.lineJoin = "round";
+    ctx.strokeStyle = pal.asteroid;
+    ctx.lineWidth = pal.lineWidth;
+    ctx.lineJoin = pal.pixel ? "miter" : "round";
     ctx.beginPath();
     ctx.moveTo(this.verts[0][0], this.verts[0][1]);
     for (let i = 1; i < this.verts.length; i++)
       ctx.lineTo(this.verts[i][0], this.verts[i][1]);
     ctx.closePath();
+    if (pal.asteroidFill) {
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = pal.asteroidFill;
+      ctx.fill();
+    }
+    setGlow(ctx, pal, pal.asteroid);
     ctx.stroke();
     ctx.restore();
   }
@@ -175,7 +207,7 @@ class Ship {
     return [new Bullet(ox, oy, this.angle)];
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, pal: Palette) {
     if (this.dead) return;
     // Blink while invincible after respawn
     if (this.invincible > 0 && Math.floor(this.invincible * 8) % 2 === 0)
@@ -184,9 +216,10 @@ class Ship {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 1.5;
-    ctx.lineJoin = "round";
+    ctx.strokeStyle = pal.ship;
+    ctx.lineWidth = pal.lineWidth;
+    ctx.lineJoin = pal.pixel ? "miter" : "round";
+    setGlow(ctx, pal, pal.ship);
 
     // Classic silhouette: triangle with rear notch
     ctx.beginPath();
@@ -203,7 +236,8 @@ class Ship {
       ctx.moveTo(-8, -4);
       ctx.lineTo(-8 - rand(6, 14), 0);
       ctx.lineTo(-8, 4);
-      ctx.strokeStyle = "rgba(255, 130, 0, 0.85)";
+      ctx.strokeStyle = pal.flame;
+      setGlow(ctx, pal, pal.flame);
       ctx.stroke();
     }
 
@@ -239,10 +273,10 @@ class Particle {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, pal: Palette) {
     const alpha = this.ttl / this.life;
-    ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = `rgba(${pal.particleRgb},${alpha.toFixed(2)})`;
+    ctx.lineWidth = pal.particleWidth;
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
     ctx.lineTo(this.x - this.vx * 0.05, this.y - this.vy * 0.05);
@@ -276,14 +310,24 @@ export interface AsteroidsController {
   restart(): void;
   /** Cancels the loop and removes listeners. Idempotent. */
   destroy(): void;
+  /** Swaps the palette in place; the match is untouched. */
+  setSkin(skin: SkinId, mode: ColorMode): void;
+}
+
+export interface AsteroidsOptions {
+  skin?: SkinId;
+  mode?: ColorMode;
 }
 
 export function createAsteroids(
   canvas: HTMLCanvasElement,
   callbacks: AsteroidsCallbacks,
+  { skin = DEFAULT_SKIN, mode = DEFAULT_COLOR_MODE }: AsteroidsOptions = {},
 ): AsteroidsController {
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("2D canvas context unavailable");
+
+  let palette: Palette = SKIN_PALETTES[skin][mode];
 
   // Input
   const keys: Keys = {};
@@ -476,24 +520,30 @@ export function createAsteroids(
   }
 
   function drawOverlay(title: string, sub: string) {
-    ctx!.textAlign = "center";
-    ctx!.fillStyle = "#fff";
-    ctx!.font = "bold 46px monospace";
-    ctx!.fillText(title, W / 2, H / 2 - 18);
-    ctx!.font = "18px monospace";
-    ctx!.fillStyle = "rgba(255,255,255,0.65)";
-    ctx!.fillText(sub, W / 2, H / 2 + 22);
+    const c = ctx!;
+    c.textAlign = "center";
+    c.fillStyle = palette.title;
+    setGlow(c, palette, palette.title);
+    c.font = "bold 46px monospace";
+    c.fillText(title, W / 2, H / 2 - 18);
+    c.shadowBlur = 0;
+    c.font = "18px monospace";
+    c.fillStyle = palette.subtitle;
+    c.fillText(sub, W / 2, H / 2 + 22);
   }
 
   function draw() {
     const c = ctx!;
-    c.fillStyle = "#000";
+    const pal = palette;
+    c.shadowBlur = 0;
+    c.fillStyle = pal.board;
     c.fillRect(0, 0, W, H);
 
-    particles.forEach((p) => p.draw(c));
-    asteroids.forEach((a) => a.draw(c));
-    bullets.forEach((b) => b.draw(c));
-    ship.draw(c);
+    particles.forEach((p) => p.draw(c, pal));
+    asteroids.forEach((a) => a.draw(c, pal));
+    bullets.forEach((b) => b.draw(c, pal));
+    ship.draw(c, pal);
+    c.shadowBlur = 0;
 
     if (state === "gameover")
       drawOverlay("GAME OVER", `PUNTAJE: ${score}   —   ENTER PARA REINICIAR`);
@@ -529,6 +579,9 @@ export function createAsteroids(
     },
     restart() {
       if (!destroyed) initGame();
+    },
+    setSkin(nextSkin, nextMode) {
+      palette = SKIN_PALETTES[nextSkin][nextMode];
     },
     destroy() {
       destroyed = true;

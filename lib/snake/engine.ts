@@ -1,3 +1,10 @@
+import {
+  DEFAULT_COLOR_MODE,
+  DEFAULT_SKIN,
+  type ColorMode,
+  type SkinId,
+} from "@/lib/skins";
+import { SKIN_PALETTES, type Palette } from "./skins";
 import { FRUIT_SPRITES, FRUITS_SHEET_URL, type FruitName } from "./sprites";
 
 export const COLS = 20;
@@ -150,17 +157,6 @@ export function tick(state: SnakeState, random: Random = Math.random): void {
 
 export const CANVAS_SIZE = COLS * CELL;
 
-const COLOR = {
-  board: "#0a0a18",
-  grid: "#16163a",
-  body: "#00ff88",
-  head: "#00f5ff",
-  food: "#ff006e",
-  title: "#00f5ff",
-  sub: "#8a8fb5",
-  veil: "rgba(10, 10, 24, 0.72)",
-};
-
 const MONO = "monospace";
 
 function overlayFor(
@@ -176,18 +172,46 @@ function overlayFor(
   return null;
 }
 
+/** Glow for the next draw calls; a palette with glow 0 turns it off. */
+function setGlow(
+  ctx: CanvasRenderingContext2D,
+  pal: Palette,
+  color: string,
+): void {
+  ctx.shadowBlur = pal.glow;
+  ctx.shadowColor = color;
+}
+
+// 8-bit fruit: a chunky plus sign on a 4px grid, centered in the cell.
+const BLOCK_FRUIT = ["0110", "1111", "1111", "0110"];
+
 function drawFood(
   ctx: CanvasRenderingContext2D,
   food: Food,
   sheet: HTMLImageElement | null,
+  pal: Palette,
 ): void {
   const px = food.x * CELL;
   const py = food.y * CELL;
+  if (pal.foodStyle === "block") {
+    const unit = 4;
+    const off = (CELL - unit * BLOCK_FRUIT.length) / 2;
+    ctx.fillStyle = pal.food;
+    BLOCK_FRUIT.forEach((row, r) => {
+      for (let c = 0; c < row.length; c++) {
+        if (row[c] === "1")
+          ctx.fillRect(px + off + c * unit, py + off + r * unit, unit, unit);
+      }
+    });
+    return;
+  }
   if (sheet === null) {
-    ctx.fillStyle = COLOR.food;
+    setGlow(ctx, pal, pal.food);
+    ctx.fillStyle = pal.food;
     ctx.beginPath();
     ctx.arc(px + CELL / 2, py + CELL / 2, CELL / 3, 0, Math.PI * 2);
     ctx.fill();
+    ctx.shadowBlur = 0;
     return;
   }
   const rect = FRUIT_SPRITES[food.fruit];
@@ -195,6 +219,14 @@ function drawFood(
   const scale = Math.min((CELL - 4) / rect.w, (CELL - 4) / rect.h);
   const dw = rect.w * scale;
   const dh = rect.h * scale;
+  ctx.save();
+  ctx.filter = pal.foodFilter;
+  if (pal.foodHalo) {
+    ctx.shadowBlur = 3;
+    ctx.shadowColor = pal.foodHalo;
+  } else {
+    setGlow(ctx, pal, pal.food);
+  }
   ctx.drawImage(
     sheet,
     rect.x,
@@ -206,23 +238,27 @@ function drawFood(
     dw,
     dh,
   );
+  ctx.restore();
 }
 
 function drawOverlay(
   ctx: CanvasRenderingContext2D,
   title: string,
   sub: string,
+  pal: Palette,
 ): void {
   const center = CANVAS_SIZE / 2;
-  ctx.fillStyle = COLOR.veil;
+  ctx.fillStyle = pal.veil;
   ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillStyle = COLOR.title;
+  ctx.fillStyle = pal.title;
   ctx.font = `bold 36px ${MONO}`;
+  setGlow(ctx, pal, pal.title);
   ctx.fillText(title, center, center - (sub ? 16 : 0));
+  ctx.shadowBlur = 0;
   if (sub) {
-    ctx.fillStyle = COLOR.sub;
+    ctx.fillStyle = pal.sub;
     ctx.font = `16px ${MONO}`;
     ctx.fillText(sub, center, center + 24);
   }
@@ -230,39 +266,48 @@ function drawOverlay(
 
 // Full frame: board, grid, fruit, snake (head drawn last) and status overlay.
 // `sheet` is the loaded fruits.png, or null to draw the fallback circle.
+// Every color comes from `pal` (lib/snake/skins.ts).
 export function drawBoard(
   ctx: CanvasRenderingContext2D,
   state: SnakeState,
   paused: boolean,
   sheet: HTMLImageElement | null,
+  pal: Palette = SKIN_PALETTES[DEFAULT_SKIN][DEFAULT_COLOR_MODE],
 ): void {
-  ctx.fillStyle = COLOR.board;
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = pal.board;
   ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
-  ctx.strokeStyle = COLOR.grid;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  for (let x = 0; x <= COLS; x++) {
-    ctx.moveTo(x * CELL + 0.5, 0);
-    ctx.lineTo(x * CELL + 0.5, CANVAS_SIZE);
+  if (pal.grid) {
+    ctx.strokeStyle = pal.grid;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x <= COLS; x++) {
+      ctx.moveTo(x * CELL + 0.5, 0);
+      ctx.lineTo(x * CELL + 0.5, CANVAS_SIZE);
+    }
+    for (let y = 0; y <= ROWS; y++) {
+      ctx.moveTo(0, y * CELL + 0.5);
+      ctx.lineTo(CANVAS_SIZE, y * CELL + 0.5);
+    }
+    ctx.stroke();
   }
-  for (let y = 0; y <= ROWS; y++) {
-    ctx.moveTo(0, y * CELL + 0.5);
-    ctx.lineTo(CANVAS_SIZE, y * CELL + 0.5);
-  }
-  ctx.stroke();
 
-  if (state.food) drawFood(ctx, state.food, sheet);
+  if (state.food) drawFood(ctx, state.food, sheet, pal);
 
   // Tail to head, so the head is painted on top.
+  const size = CELL - pal.inset * 2;
   for (let i = state.snake.length - 1; i >= 0; i--) {
     const c = state.snake[i];
-    ctx.fillStyle = i === 0 ? COLOR.head : COLOR.body;
-    ctx.fillRect(c.x * CELL + 1, c.y * CELL + 1, CELL - 2, CELL - 2);
+    const color = i === 0 ? pal.head : pal.body;
+    ctx.fillStyle = color;
+    setGlow(ctx, pal, color);
+    ctx.fillRect(c.x * CELL + pal.inset, c.y * CELL + pal.inset, size, size);
   }
+  ctx.shadowBlur = 0;
 
   const message = overlayFor(state.status, paused);
-  if (message) drawOverlay(ctx, message.title, message.sub);
+  if (message) drawOverlay(ctx, message.title, message.sub, pal);
 }
 
 export interface SnakeStats {
@@ -281,6 +326,13 @@ export interface SnakeController {
   end(): void; // FIN button: ends the match now
   restart(): void;
   destroy(): void; // stops the loop and listeners; idempotent
+  /** Swaps the palette in place; the match is untouched. */
+  setSkin(skin: SkinId, mode: ColorMode): void;
+}
+
+export interface SnakeOptions {
+  skin?: SkinId;
+  mode?: ColorMode;
 }
 
 const MAX_FRAME_MS = 50;
@@ -303,6 +355,7 @@ function ignoresKeys(target: EventTarget | null): boolean {
 export function createSnake(
   canvas: HTMLCanvasElement,
   callbacks: SnakeCallbacks,
+  { skin = DEFAULT_SKIN, mode = DEFAULT_COLOR_MODE }: SnakeOptions = {},
 ): SnakeController {
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("2D canvas context unavailable");
@@ -318,6 +371,7 @@ export function createSnake(
   let rafId = 0;
   let reported: string | null = null;
   let sheet: HTMLImageElement | null = null;
+  let palette: Palette = SKIN_PALETTES[skin][mode];
 
   function emitStats(): void {
     const stats = { score: scoreOf(state), level: levelOf(state) };
@@ -357,7 +411,7 @@ export function createSnake(
       if (isOver(state)) finish();
     }
 
-    drawBoard(ctx!, state, paused, sheet);
+    drawBoard(ctx!, state, paused, sheet, palette);
   }
 
   function startLoop(): void {
@@ -436,6 +490,9 @@ export function createSnake(
     togglePause,
     end,
     restart,
+    setSkin(nextSkin, nextMode) {
+      palette = SKIN_PALETTES[nextSkin][nextMode];
+    },
     destroy(): void {
       if (destroyed) return;
       destroyed = true;

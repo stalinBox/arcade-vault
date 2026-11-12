@@ -8,6 +8,8 @@ import {
   type AsteroidsStats,
 } from "@/lib/asteroids/engine";
 import { ScoreForm } from "@/components/score-form";
+import { SkinPicker } from "@/components/skin-picker";
+import { useColorMode, useSkin } from "@/lib/skins";
 
 const INITIAL_STATS: AsteroidsStats = { score: 0, lives: 3, level: 1 };
 
@@ -19,19 +21,33 @@ export function AsteroidsPlayer() {
   const [result, setResult] = useState<{ score: number; level: number } | null>(
     null,
   );
+  const [skin, setSkin] = useSkin("asteroids");
+  const mode = useColorMode();
+  // Latest look, read once when the game is created below.
+  const lookRef = useRef({ skin, mode });
+
+  // Declared before the create effect so the first create sees the current look.
+  useEffect(() => {
+    lookRef.current = { skin, mode };
+    gameRef.current?.setSkin(skin, mode);
+  }, [skin, mode]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const game = createAsteroids(canvas, {
-      onStats(next) {
-        setStats(next);
-        // A game with lives left is running: covers restarts via Enter too.
-        if (next.lives > 0) setResult(null);
+    const game = createAsteroids(
+      canvas,
+      {
+        onStats(next) {
+          setStats(next);
+          // A game with lives left is running: covers restarts via Enter too.
+          if (next.lives > 0) setResult(null);
+        },
+        onGameOver: setResult,
+        onPauseChange: setPaused,
       },
-      onGameOver: setResult,
-      onPauseChange: setPaused,
-    });
+      lookRef.current,
+    );
     gameRef.current = game;
     return () => {
       game.destroy();
@@ -78,6 +94,7 @@ export function AsteroidsPlayer() {
             <div className="v">{String(stats.level).padStart(2, "0")}</div>
           </div>
         </div>
+        <SkinPicker value={skin} onChange={setSkin} />
         <div className="hud-actions">
           <button
             type="button"
@@ -113,7 +130,9 @@ export function AsteroidsPlayer() {
         </div>
       </div>
 
-      {result && result.score > 0 && <ScoreForm gameId="asteroids" score={result.score} />}
+      {result && result.score > 0 && (
+        <ScoreForm gameId="asteroids" score={result.score} />
+      )}
     </div>
   );
 }

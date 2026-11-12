@@ -8,6 +8,8 @@ import {
   type SnakeStats,
 } from "@/lib/snake/engine";
 import { ScoreForm } from "@/components/score-form";
+import { SkinPicker } from "@/components/skin-picker";
+import { useColorMode, useSkin } from "@/lib/skins";
 
 const INITIAL_STATS: SnakeStats = { score: 0, level: 1 };
 
@@ -17,19 +19,33 @@ export function SnakePlayer() {
   const [stats, setStats] = useState<SnakeStats>(INITIAL_STATS);
   const [paused, setPaused] = useState(false);
   const [result, setResult] = useState<SnakeStats | null>(null);
+  const [skin, setSkin] = useSkin("snake");
+  const mode = useColorMode();
+  // Latest look, read once when the game is created below.
+  const lookRef = useRef({ skin, mode });
+
+  // Declared before the create effect so the first create sees the current look.
+  useEffect(() => {
+    lookRef.current = { skin, mode };
+    gameRef.current?.setSkin(skin, mode);
+  }, [skin, mode]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const game = createSnake(canvas, {
-      onStats(next) {
-        setStats(next);
-        // Stats are emitted again only when a new match starts, so this clears the form on restart.
-        setResult(null);
+    const game = createSnake(
+      canvas,
+      {
+        onStats(next) {
+          setStats(next);
+          // Stats are emitted again only when a new match starts, so this clears the form on restart.
+          setResult(null);
+        },
+        onGameOver: setResult,
+        onPauseChange: setPaused,
       },
-      onGameOver: setResult,
-      onPauseChange: setPaused,
-    });
+      lookRef.current,
+    );
     gameRef.current = game;
     return () => {
       game.destroy();
@@ -72,6 +88,7 @@ export function SnakePlayer() {
             <div className="v">{String(stats.level).padStart(2, "0")}</div>
           </div>
         </div>
+        <SkinPicker value={skin} onChange={setSkin} />
         <div className="hud-actions">
           <button
             type="button"
