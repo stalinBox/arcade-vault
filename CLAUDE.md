@@ -39,6 +39,7 @@ Subagents live in `.claude/agents/`.
 - `game-planner` — plans and decides which new game fits the platform (proposes only, never writes specs or code). Persistent memory in `.claude/agent-memory/game-planner/` (`memory: project`, versioned); keeps the human To-Do `references/games-suggestions-todo.md` updated. Next step after a proposal: `/add-game <slug>`.
   - Invoke as `@game-planner` or via the Agent tool; a new agent file is only registered after restarting the session.
   - Parallel runs (e.g. one per category): tell each to NOT write files, then consolidate `suggestions.md`, `MEMORY.md` and the To-Do once. Concurrent writes to the shared memory collide.
+- `skin-designer` — audits and implements per-game skins `classic` (default) / `neon` / `retro`, legible in dark and light mode (global `data-theme` toggle). Modes: `audit` (read-only), `<slug>`, `all`, `theme`. Writes code; never commits. Contract (`lib/skins.ts`, `lib/<slug>/skins.ts`, `setSkin` on the controller) lives in `.claude/agents/skin-designer.md`.
 
 ## Spec-driven workflow
 
