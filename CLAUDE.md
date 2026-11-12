@@ -32,6 +32,12 @@ Skills live in `.agents/skills/` and are symlinked into `.claude/skills/`. `skil
 - `/spec-impl <NN-slug>` — implements a spec whose state is `Aprobado`: creates branch `spec-NN-slug` (`AutoCreateBranch` in `specs/.spec-config.yml`), goes step by step with pauses, never commits on its own.
 - `/add-game <slug | reference folder | idea>` — `/spec` specialised for one new game with its leaderboard. Uses `.agents/skills/add-game/template.md`. Only writes the spec.
 
+## Agents
+
+Subagents live in `.claude/agents/`.
+
+- `game-planner` — plans and decides which new game fits the platform (proposes only, never writes specs or code). Persistent memory in `.claude/agent-memory/game-planner/` (`memory: project`, versioned); keeps the human To-Do `references/games-suggestions-todo.md` updated. Next step after a proposal: `/add-game <slug>`.
+
 ## Spec-driven workflow
 
 Every feature starts as a spec in `specs/` (Spanish, header `**Estado:**` / `**Fecha:**` / `**Depende de:**` / `**Objetivo:**`). The human moves the state from `Borrador` to `Aprobado`; after the acceptance criteria pass it becomes `IMPLEMENTED`. One branch and one PR per spec. Specs 01–10 are implemented; read the latest game spec before touching the game pattern.
@@ -42,15 +48,15 @@ Arcade Vault is a retro game portal: players play canvas games as guests and sav
 
 ### Routes (`app/`)
 
-| Route         | Content                                                                                          |
-| ------------- | ------------------------------------------------------------------------------------------------ |
-| `/inicio`     | Landing: catalog, latest scores, top scores                                                      |
-| `/biblioteca` | Game library with category filter (see `references/implemented-games.md`) when you need to check which games are implemented and add more games.                                                              |
-| `/juego/[id]` | Game detail + top 10                                                                             |
-| `/jugar/[id]` | Player. `GAME_PLAYERS` maps `id → component`; ids without an entry show a static CRT placeholder |
-| `/salon`      | Hall of fame, top 12 per game                                                                    |
-| `/acerca`     | About + contact form (server action `sendContact`, Resend)                                       |
-| `/auth`       | Visual-only login/signup form. Real auth does not exist yet                                      |
+| Route         | Content                                                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/inicio`     | Landing: catalog, latest scores, top scores                                                                                                      |
+| `/biblioteca` | Game library with category filter (see `references/implemented-games.md`) when you need to check which games are implemented and add more games. |
+| `/juego/[id]` | Game detail + top 10                                                                                                                             |
+| `/jugar/[id]` | Player. `GAME_PLAYERS` maps `id → component`; ids without an entry show a static CRT placeholder                                                 |
+| `/salon`      | Hall of fame, top 12 per game                                                                                                                    |
+| `/acerca`     | About + contact form (server action `sendContact`, Resend)                                                                                       |
+| `/auth`       | Visual-only login/signup form. Real auth does not exist yet                                                                                      |
 
 `app/layout.tsx` wraps every page with `Nav` and `Footer` and loads the fonts (Press Start 2P, JetBrains Mono, Courier Prime).
 
@@ -82,5 +88,5 @@ Tailwind v4 is imported in `app/globals.css`, but almost all UI uses the hand-wr
 
 ### Other directories
 
-- `references/` — read-only source material: `started-games/` (original JS games that were ported), `templates/` (the original visual design in JSX/CSS), `source-assets/`. Never modify it.
+- `references/` — read-only source material: `started-games/` (original JS games that were ported), `templates/` (the original visual design in JSX/CSS), `source-assets/`. Never modify it, except `games-suggestions-todo.md`, which the `game-planner` agent maintains.
 - `demos/` — scratch component, not used by the app.
