@@ -76,18 +76,21 @@ Pages are thin: a sync default export renders `<Suspense>` around an async loade
 
 Four playable games: `asteroids`, `blocks`, `rompebloques`, `snake`. Each one has the same pieces:
 
-1. `lib/<slug>/engine.ts` — no global DOM access. `create<Game>(canvas, callbacks)` returns a controller (`togglePause`, `restart`, `end`, `destroy`). State lives in the closure, not in module variables. Callbacks: `onStats`, `onGameOver`, `onPauseChange`. Optional `sprites.ts` for sprite atlases.
-2. `components/<slug>-player.tsx` — client component: platform HUD (`.player-hud`), canvas inside `.crt.crt-game`, and `ScoreForm` when the match ends with `score > 0`. `destroy()` on unmount clears rAF and listeners.
-3. A migration that inserts the row in `games` (`on conflict (id) do nothing`). No new tables.
-4. `.cover-<slug>` in `app/globals.css` (base, `::before`, `::after`), pure CSS cover art.
-5. An entry in `GAME_PLAYERS` in `app/jugar/[id]/page.tsx`.
-6. Assets in `public/games/<slug>/`.
+1. `lib/<slug>/engine.ts` — no global DOM access. `create<Game>(canvas, callbacks, { skin, mode }?)` returns a controller (`togglePause`, `restart`, `end`, `destroy`, `setSkin(skin, mode)`). `setSkin` swaps the palette in place without touching the match. State lives in the closure, not in module variables. No color literals: every color comes from the active palette. Callbacks: `onStats`, `onGameOver`, `onPauseChange`. Optional `sprites.ts` for sprite atlases.
+2. `lib/<slug>/skins.ts` — `Palette` type and `SKIN_PALETTES: Record<SkinId, Record<ColorMode, Palette>>` for skins `classic` (default, the original look) / `neon` / `retro`, each in `dark` and `light`. Shared types and hooks (`useSkin(gameId)`, `useColorMode()`, `SKINS`) live in `lib/skins.ts`. Contract and contrast rules: `.claude/agents/skin-designer.md`.
+3. `components/<slug>-player.tsx` — client component: platform HUD (`.player-hud`) with `<SkinPicker>` (`components/skin-picker.tsx`, persisted in `av:skin:<slug>`), canvas inside `.crt.crt-game`, and `ScoreForm` when the match ends with `score > 0`. Calls `game.setSkin(skin, mode)` when skin or color mode changes. `destroy()` on unmount clears rAF and listeners.
+4. A migration that inserts the row in `games` (`on conflict (id) do nothing`). No new tables.
+5. `.cover-<slug>` in `app/globals.css` (base, `::before`, `::after`), pure CSS cover art.
+6. An entry in `GAME_PLAYERS` in `app/jugar/[id]/page.tsx`.
+7. Assets in `public/games/<slug>/`.
 
 Library, detail, hall of fame and landing read `games`/`scores`, so a new game shows up there with no extra code.
 
 ### Styling
 
 Tailwind v4 is imported in `app/globals.css`, but almost all UI uses the hand-written classes defined there (theme variables in `:root`, `.btn`, `.crt`, `.player-hud`, `.cover-*`, one section per screen). Reuse those classes before adding utilities.
+
+Light/dark: `data-theme="dark" | "light"` on `<html>` (default `dark`, persisted in `localStorage` key `av:theme`). An inline script in `app/layout.tsx` applies it before paint; the toggle lives in `components/nav.tsx`. `:root[data-theme="light"]` in `app/globals.css` redefines the tokens; `.crt`, card covers and the terminal stay dark in both modes (dark tokens re-declared on them). Fix light-mode issues with tokens, not utilities.
 
 ### Other directories
 

@@ -3,12 +3,38 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { setColorMode, useColorMode } from "@/lib/skins";
+
+/** Light/dark switch; the visible text states the current mode. */
+function ThemeToggle({ className }: { className: string }) {
+  const isLight = useColorMode() === "light";
+  return (
+    <button
+      type="button"
+      className={className}
+      onClick={() => setColorMode(isLight ? "dark" : "light")}
+      aria-pressed={isLight}
+      aria-label="Modo claro"
+      title={isLight ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
+    >
+      <span className="theme-glyph" aria-hidden="true">
+        {isLight ? "☀" : "☾"}
+      </span>
+      <span aria-hidden="true">{isLight ? "CLARO" : "OSCURO"}</span>
+    </button>
+  );
+}
 
 type Section = "inicio" | "biblioteca" | "salon" | "acerca" | "auth";
 
 function sectionOf(pathname: string): Section | null {
   if (pathname === "/inicio") return "inicio";
-  if (pathname === "/biblioteca" || pathname.startsWith("/juego/") || pathname.startsWith("/jugar/")) return "biblioteca";
+  if (
+    pathname === "/biblioteca" ||
+    pathname.startsWith("/juego/") ||
+    pathname.startsWith("/jugar/")
+  )
+    return "biblioteca";
   if (pathname === "/salon") return "salon";
   if (pathname === "/acerca") return "acerca";
   if (pathname === "/auth") return "auth";
@@ -31,17 +57,28 @@ export function Nav() {
           </div>
         </Link>
         <div className="links">
-          <Link href="/inicio" className={active("inicio")}>Inicio</Link>
-          <Link href="/biblioteca" className={active("biblioteca")}>Biblioteca</Link>
-          <Link href="/salon" className={active("salon")}>Salón de la Fama</Link>
-          <Link href="/acerca" className={active("acerca")}>Acerca de</Link>
+          <Link href="/inicio" className={active("inicio")}>
+            Inicio
+          </Link>
+          <Link href="/biblioteca" className={active("biblioteca")}>
+            Biblioteca
+          </Link>
+          <Link href="/salon" className={active("salon")}>
+            Salón de la Fama
+          </Link>
+          <Link href="/acerca" className={active("acerca")}>
+            Acerca de
+          </Link>
         </div>
         <div className="spacer"></div>
         <div className="coin-counter">
           <span className="coin"></span>
           <span>CRÉDITOS · 03</span>
         </div>
-        <Link href="/auth" className="btn auth-btn">Iniciar Sesión</Link>
+        <ThemeToggle className="btn ghost theme-btn" />
+        <Link href="/auth" className="btn auth-btn">
+          Iniciar Sesión
+        </Link>
         <button
           className="btn ghost hamburger"
           onClick={() => setOpen(true)}
@@ -53,16 +90,50 @@ export function Nav() {
         </button>
       </nav>
 
-      <div className={"av-mobile-backdrop" + (open ? " open" : "")} onClick={close}></div>
-      <aside id="av-mobile-panel" className={"av-mobile-panel" + (open ? " open" : "")} inert={!open}>
-        <div className="pixel neon-cyan" style={{ fontSize: 11, marginBottom: 16 }}>MENÚ</div>
-        <Link href="/inicio" className={active("inicio")} onClick={close}>Inicio</Link>
-        <Link href="/biblioteca" className={active("biblioteca")} onClick={close}>Biblioteca</Link>
-        <Link href="/salon" className={active("salon")} onClick={close}>Salón de la Fama</Link>
-        <Link href="/acerca" className={active("acerca")} onClick={close}>Acerca de</Link>
-        <Link href="/auth" className={active("auth")} onClick={close}>Iniciar Sesión</Link>
+      <div
+        className={"av-mobile-backdrop" + (open ? " open" : "")}
+        onClick={close}
+      ></div>
+      <aside
+        id="av-mobile-panel"
+        className={"av-mobile-panel" + (open ? " open" : "")}
+        inert={!open}
+      >
+        <div
+          className="pixel neon-cyan"
+          style={{ fontSize: 11, marginBottom: 16 }}
+        >
+          MENÚ
+        </div>
+        <Link href="/inicio" className={active("inicio")} onClick={close}>
+          Inicio
+        </Link>
+        <Link
+          href="/biblioteca"
+          className={active("biblioteca")}
+          onClick={close}
+        >
+          Biblioteca
+        </Link>
+        <Link href="/salon" className={active("salon")} onClick={close}>
+          Salón de la Fama
+        </Link>
+        <Link href="/acerca" className={active("acerca")} onClick={close}>
+          Acerca de
+        </Link>
+        <Link href="/auth" className={active("auth")} onClick={close}>
+          Iniciar Sesión
+        </Link>
+        <ThemeToggle className="btn ghost theme-btn-panel" />
         <div style={{ flex: 1 }}></div>
-        <div className="pixel" style={{ fontSize: 9, color: "var(--ink-faint)", letterSpacing: "0.16em" }}>
+        <div
+          className="pixel"
+          style={{
+            fontSize: 9,
+            color: "var(--ink-faint)",
+            letterSpacing: "0.16em",
+          }}
+        >
           CRÉDITOS · 03
         </div>
       </aside>
