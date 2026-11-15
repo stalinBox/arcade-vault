@@ -1,3 +1,4 @@
+import { createGameLoop, type GameLoop } from "@/lib/game-loop";
 // Port of references/started-games/04-arkanoid/game.js.
 // Same rules as the reference. Logic field is 640x640; it is drawn into a fixed
 // 800x600 canvas (scaled by CSS) with the field scaled to 600 px and centered.
@@ -182,6 +183,7 @@ export function createRompebloques(
 
   const keys = { left: false, right: false };
   let paused = false;
+  let loop: GameLoop | null = null;
   let gameOverSent = false;
   let lastStats: RompebloquesStats | null = null;
 
@@ -215,9 +217,9 @@ export function createRompebloques(
   function setPaused(value: boolean) {
     if (paused === value) return;
     paused = value;
-    lastTime = null; // no time jump on resume
     if (paused) currentSound?.pause(); // never resumed
     callbacks.onPauseChange(paused);
+    loop?.wake();
   }
 
   // Sound: one shared channel; a new sound cuts the one playing.
@@ -248,7 +250,6 @@ export function createRompebloques(
 
   function resetGame() {
     setPaused(false);
-    lastTime = null;
     gameOverSent = false;
     lastStats = null;
     state.phase = "ready";
@@ -260,6 +261,7 @@ export function createRompebloques(
     state.blocks = createBlocks(state.level);
     state.explosions = [];
     emitStats();
+    loop?.wake();
   }
 
   function togglePause() {
@@ -273,6 +275,7 @@ export function createRompebloques(
     state.phase = "lost";
     state.ball.vx = state.ball.vy = 0;
     fireGameOver();
+    loop?.wake();
   }
 
   function launch() {
@@ -676,24 +679,24 @@ export function createRompebloques(
     }
   }
 
-  let raf = 0;
   let destroyed = false;
-  let lastTime: number | null = null;
 
-  function frame(now: number) {
-    if (destroyed) return;
-    if (lastTime !== null && !paused) {
-      update(Math.min((now - lastTime) / 1000, 0.05)); // dt in s, capped at 50 ms
+  // Returns false to put the loop to sleep: paused, or match over once the
+  // last explosions have faded. 'ready' keeps running (the paddle moves).
+  function frame(_now: number, dt: number): boolean {
+    if (destroyed) return false;
+    if (!paused) {
+      update(Math.min(dt / 1000, 0.05)); // dt in s, capped at 50 ms
       if (state.phase === "won" || state.phase === "lost") fireGameOver();
       else emitStats();
     }
-    lastTime = now;
     draw();
-    raf = requestAnimationFrame(frame);
+    const ended = state.phase === "won" || state.phase === "lost";
+    return !paused && !(ended && state.explosions.length === 0);
   }
 
   loadSprites(() => {
-    if (!destroyed) raf = requestAnimationFrame(frame);
+    if (!destroyed) loop = createGameLoop(frame);
   });
 
   emitStats();
@@ -704,13 +707,14 @@ export function createRompebloques(
     restart: resetGame,
     destroy() {
       destroyed = true;
-      cancelAnimationFrame(raf);
+      loop?.destroy();
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
       currentSound?.pause();
     },
     setSkin(nextSkin, nextMode) {
       palette = SKIN_PALETTES[nextSkin][nextMode];
+      loop?.wake();
     },
   };
 }

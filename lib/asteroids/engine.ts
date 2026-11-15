@@ -1,3 +1,4 @@
+import { createGameLoop, type GameLoop } from "@/lib/game-loop";
 // Port of references/started-games/02-asteroids/game.js.
 // No DOM access outside createAsteroids(); all game state lives in its closure.
 // Colors come from the active skin palette (lib/asteroids/skins.ts).
@@ -340,6 +341,7 @@ export function createAsteroids(
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.code === "KeyP" && !e.repeat) togglePause();
+    if (state === "gameover") loop?.wake(); // Enter restarts from update()
     justPressed[e.code] = !keys[e.code];
     keys[e.code] = true;
     if (
@@ -371,6 +373,7 @@ export function createAsteroids(
   let deadTimer = 0;
   let paused = false;
   let destroyed = false;
+  let loop: GameLoop | null = null;
   let lastStats: AsteroidsStats | null = null;
 
   function emitStats() {
@@ -389,8 +392,8 @@ export function createAsteroids(
     if (paused === value) return;
     paused = value;
     clearKeys();
-    lastTime = null; // next dt is 0, no jump after resuming
     callbacks.onPauseChange(paused);
+    loop?.wake();
   }
 
   function togglePause() {
@@ -403,6 +406,7 @@ export function createAsteroids(
     clearKeys();
     emitStats(); // lives = 0 reaches React before onGameOver
     callbacks.onGameOver({ score, level });
+    loop?.wake();
   }
 
   function spawnAsteroids(count: number) {
@@ -430,6 +434,7 @@ export function createAsteroids(
     setPaused(false);
     lastStats = null; // always announce the start of a game
     emitStats();
+    loop?.wake();
   }
 
   function nextLevel() {
@@ -551,19 +556,17 @@ export function createAsteroids(
   }
 
   // Main loop
-  let lastTime: number | null = null;
-  let rafId = 0;
-
-  function loop(ts: number) {
-    const dt = lastTime === null ? 0 : Math.min((ts - lastTime) / 1000, 0.05);
-    lastTime = ts;
-    if (!paused) update(dt);
+  // Returns false to put the loop to sleep: paused, or game over once the
+  // explosion particles have faded.
+  function frame(_now: number, dt: number): boolean {
+    if (destroyed) return false;
+    if (!paused) update(Math.min(dt / 1000, 0.05));
     draw();
-    rafId = requestAnimationFrame(loop);
+    return !paused && !(state === "gameover" && particles.length === 0);
   }
 
   initGame();
-  rafId = requestAnimationFrame(loop);
+  loop = createGameLoop(frame);
 
   return {
     togglePause,
@@ -582,10 +585,11 @@ export function createAsteroids(
     },
     setSkin(nextSkin, nextMode) {
       palette = SKIN_PALETTES[nextSkin][nextMode];
+      loop?.wake();
     },
     destroy() {
       destroyed = true;
-      cancelAnimationFrame(rafId);
+      loop?.destroy();
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     },
