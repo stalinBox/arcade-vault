@@ -640,6 +640,34 @@ a { color: inherit; text-decoration: none; }
   filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 14px rgba(0,245,255,0.5));
 }
 
+/* DUELO PALA: radial field with a faint grid and dashed center line (::before);
+   cyan and magenta paddles, a ball and its smash trail (::after). */
+.cover-paddle-duel {
+  container-type: size;
+  background: radial-gradient(circle at 50% 50%, #001a2a, #0a0a18);
+}
+.cover-paddle-duel::before {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(180deg, rgba(255,255,255,0.28) 0 3cqh, transparent 0 6cqh) 50% 0 / 2px 100% no-repeat,
+    linear-gradient(90deg, rgba(0,245,255,0.06) 1px, transparent 1px) 0 0 / 8cqw 8cqw,
+    linear-gradient(0deg, rgba(0,245,255,0.06) 1px, transparent 1px) 0 0 / 8cqw 8cqw;
+}
+.cover-paddle-duel::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(var(--yellow), var(--yellow)) 32cqw 42cqh / 4cqw 4cqw,
+    linear-gradient(rgba(245,255,0,0.5), rgba(245,255,0,0.5)) 26cqw 42cqh / 4cqw 4cqw,
+    linear-gradient(rgba(245,255,0,0.3), rgba(245,255,0,0.3)) 20cqw 42cqh / 4cqw 4cqw,
+    linear-gradient(rgba(245,255,0,0.15), rgba(245,255,0,0.15)) 14cqw 42cqh / 4cqw 4cqw,
+    linear-gradient(var(--cyan), var(--cyan)) 6cqw 32cqh / 2.4cqw 30cqh,
+    linear-gradient(var(--magenta), var(--magenta)) 91.6cqw 36cqh / 2.4cqw 30cqh;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 14px rgba(0,245,255,0.5));
+}
+
 .cover-rana { background: linear-gradient(180deg,#001f2a,#0a0a18); }
 .cover-rana::after {
   content: "";

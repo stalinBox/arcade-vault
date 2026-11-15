@@ -1,6 +1,6 @@
 # SPEC GJ-02 — DUELO PALA: jugable en `/jugar/paddle-duel` con su leaderboard
 
-**Estado:** Borrador
+**Estado:** IMPLEMENTED
 **Fecha:** 2026-11-12
 **Depende de:** SPEC 01 (rutas `/juego/[id]` y `/jugar/[id]`, HUD `.player-hud`, marco `.crt`), SPEC 04 (clientes de Supabase, CLI), SPEC 05 (patrón de engine + player), SPEC 07 (tablas `games` y `scores`, `ScoreForm`, `GAME_PLAYERS`), SPEC 10 (último player de referencia, `specs/10-snake-jugable.md`), `specs/game-jam/paddle-duel/01-paddle-duel-motor.md` (engine `lib/paddle-duel/engine.ts`)
 **Fuente de referencia:** Sin referencia: diseño propio.
@@ -140,35 +140,35 @@ Cada paso deja la app compilando (`npm run build`). Requisito: el spec 01 está 
 
 ## 4. Criterios de aceptación
 
-- [ ] `npm run build` termina sin errores.
-- [ ] `npm run lint` termina sin errores nuevos.
-- [ ] `supabase/migrations/` contiene exactamente un archivo nuevo con el SQL de la sección 2.
-- [ ] `npx supabase db push --remote` (o `apply_migration` por MCP) termina sin error.
-- [ ] La tabla `games` contiene una fila con `id = 'paddle-duel'`, `cat = 'VERSUS'`, `color = 'cyan'`, `cover = 'cover-paddle-duel'`, y las filas previas intactas.
-- [ ] `/biblioteca` muestra la tarjeta `DUELO PALA` con la portada `.cover-paddle-duel` y aparece al filtrar por `VERSUS`, sin errores en consola.
-- [ ] `/juego/paddle-duel` muestra `DUELO PALA` y el ranking real; con cero filas, `Sin puntuaciones todavía`.
-- [ ] `/jugar/paddle-duel` muestra el HUD de la plataforma (`Jugador`, `Puntuación`, `Vidas`, `Nivel`, sin `Tiempo`) y el canvas dentro del marco CRT, sin HUD dibujado en el canvas.
-- [ ] Al entrar, el juego aparece en `ready` con el overlay `ESPACIO PARA SACAR`, sin pulsar nada más.
-- [ ] El HUD empieza en `0`, `♥♥♥` y `01`.
-- [ ] Una devolución del jugador actualiza `Puntuación` en el HUD con el valor que muestra el popup.
-- [ ] Un gol de la CPU quita un corazón del HUD.
-- [ ] Dos goles del jugador cambian `Nivel` a `02` en el HUD.
-- [ ] `P` y el botón `PAUSA` pausan y reanudan desde el mismo punto; el botón muestra `REANUDAR` en pausa; `P` no hace nada tras el fin de partida.
-- [ ] Tras pulsar `PAUSA` con el ratón, `Espacio` y `Enter` llegan al juego y no reactivan el botón (`blur()`).
-- [ ] Al perder la tercera vida aparece el overlay `GAME OVER` y `onGameOver` se llama exactamente una vez (verificable con un `console.log` temporal que se elimina). `FIN` produce lo mismo.
-- [ ] Al terminar, `FIN` pasa a `NUEVA PARTIDA` y `PAUSA` queda deshabilitado.
-- [ ] `Enter` y `NUEVA PARTIDA` inician una partida limpia; el HUD vuelve a `0`, `♥♥♥`, `01` y el formulario desaparece.
-- [ ] Con `score > 0` aparece el formulario; con `score = 0` (por ejemplo `FIN` antes de puntuar) no.
-- [ ] Guardar con un nombre válido crea una fila en `scores` con `game_id = 'paddle-duel'`, nombre sin espacios sobrantes y la puntuación de la partida.
-- [ ] Tras guardar, `/salon` y `/juego/paddle-duel` incluyen la puntuación al recargar.
-- [ ] Si la inserción falla, se muestra el error y se puede reintentar sin perder el nombre.
-- [ ] La landing muestra las últimas puntuaciones incluidas las de `paddle-duel`.
-- [ ] Con `↑`, `↓`, `Espacio` o `Enter`, la página no hace scroll; al pulsar `SALIR` el bucle se detiene y el scroll vuelve.
-- [ ] Con `reactStrictMode` en `npm run dev`, no hay dos bucles simultáneos (la bola no va al doble de velocidad y la CPU no se mueve dos veces por frame).
-- [ ] Los demás juegos (`/jugar/asteroids`, `/jugar/blocks`, `/jugar/rompebloques`, `/jugar/snake`) siguen funcionando igual.
-- [ ] En 390 px, `/biblioteca`, `/salon`, `/juego/paddle-duel` y `/jugar/paddle-duel` no tienen scroll horizontal y el canvas conserva la relación 4:3.
-- [ ] `grep -rn "service_role" app components lib proxy.ts` no devuelve resultados.
-- [ ] `git status` no muestra cambios en `references/`, `.env.local`, `lib/supabase/database.types.ts` ni en `.cover-duelo`.
+- [X] `npm run build` termina sin errores.
+- [X] `npm run lint` termina sin errores nuevos.
+- [X] `supabase/migrations/` contiene exactamente un archivo nuevo con el SQL de la sección 2.
+- [X] `npx supabase db push --remote` (o `apply_migration` por MCP) termina sin error.
+- [X] La tabla `games` contiene una fila con `id = 'paddle-duel'`, `cat = 'VERSUS'`, `color = 'cyan'`, `cover = 'cover-paddle-duel'`, y las filas previas intactas.
+- [X] `/biblioteca` muestra la tarjeta `DUELO PALA` con la portada `.cover-paddle-duel` y aparece al filtrar por `VERSUS`, sin errores en consola.
+- [X] `/juego/paddle-duel` muestra `DUELO PALA` y el ranking real; con cero filas, `Sin puntuaciones todavía`.
+- [X] `/jugar/paddle-duel` muestra el HUD de la plataforma (`Jugador`, `Puntuación`, `Vidas`, `Nivel`, sin `Tiempo`) y el canvas dentro del marco CRT, sin HUD dibujado en el canvas.
+- [X] Al entrar, el juego aparece en `ready` con el overlay `ESPACIO PARA SACAR`, sin pulsar nada más.
+- [X] El HUD empieza en `0`, `♥♥♥` y `01`.
+- [X] Una devolución del jugador actualiza `Puntuación` en el HUD con el valor que muestra el popup.
+- [X] Un gol de la CPU quita un corazón del HUD.
+- [X] Dos goles del jugador cambian `Nivel` a `02` en el HUD.
+- [X] `P` y el botón `PAUSA` pausan y reanudan desde el mismo punto; el botón muestra `REANUDAR` en pausa; `P` no hace nada tras el fin de partida.
+- [X] Tras pulsar `PAUSA` con el ratón, `Espacio` y `Enter` llegan al juego y no reactivan el botón (`blur()`).
+- [X] Al perder la tercera vida aparece el overlay `GAME OVER` y `onGameOver` se llama exactamente una vez (verificable con un `console.log` temporal que se elimina). `FIN` produce lo mismo.
+- [X] Al terminar, `FIN` pasa a `NUEVA PARTIDA` y `PAUSA` queda deshabilitado.
+- [X] `Enter` y `NUEVA PARTIDA` inician una partida limpia; el HUD vuelve a `0`, `♥♥♥`, `01` y el formulario desaparece.
+- [X] Con `score > 0` aparece el formulario; con `score = 0` (por ejemplo `FIN` antes de puntuar) no.
+- [X] Guardar con un nombre válido crea una fila en `scores` con `game_id = 'paddle-duel'`, nombre sin espacios sobrantes y la puntuación de la partida.
+- [X] Tras guardar, `/salon` y `/juego/paddle-duel` incluyen la puntuación al recargar.
+- [X] Si la inserción falla, se muestra el error y se puede reintentar sin perder el nombre.
+- [X] La landing muestra las últimas puntuaciones incluidas las de `paddle-duel`.
+- [X] Con `↑`, `↓`, `Espacio` o `Enter`, la página no hace scroll; al pulsar `SALIR` el bucle se detiene y el scroll vuelve.
+- [X] Con `reactStrictMode` en `npm run dev`, no hay dos bucles simultáneos (la bola no va al doble de velocidad y la CPU no se mueve dos veces por frame).
+- [X] Los demás juegos (`/jugar/asteroids`, `/jugar/blocks`, `/jugar/rompebloques`, `/jugar/snake`) siguen funcionando igual.
+- [X] En 390 px, `/biblioteca`, `/salon`, `/juego/paddle-duel` y `/jugar/paddle-duel` no tienen scroll horizontal y el canvas conserva la relación 4:3.
+- [X] `grep -rn "service_role" app components lib proxy.ts` no devuelve resultados.
+- [X] `git status` no muestra cambios en `references/`, `.env.local`, `lib/supabase/database.types.ts` ni en `.cover-duelo`.
 
 ---
 
