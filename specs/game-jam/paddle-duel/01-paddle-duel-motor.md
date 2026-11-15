@@ -184,37 +184,37 @@ Cada paso deja la app compilando (`npm run build`).
 
 ## 4. Criterios de aceptación
 
-- [ ] `npm run build` termina sin errores.
-- [ ] `npm run lint` termina sin errores nuevos.
-- [ ] `lib/paddle-duel/engine.ts` exporta `createPaddleDuel`, `PaddleDuelStats`, `PaddleDuelCallbacks` y `PaddleDuelController` con las firmas de la sección 2.
-- [ ] El módulo no tiene variables de estado a nivel de módulo (solo constantes) ni imports de React.
-- [ ] Al crear el controlador se dibuja el campo 800 × 600 en `ready` con el overlay `ESPACIO PARA SACAR` y la bola quieta; `onStats` se llama con `{ score: 0, lives: 3, level: 1 }`.
-- [ ] En `ready`, `↑`/`↓` y `W`/`S` mueven la pala del jugador.
-- [ ] `Espacio` en `ready` saca la bola hacia la CPU.
-- [ ] `↑` y `W` suben la pala, `↓` y `S` la bajan, y la pala nunca sale del campo.
-- [ ] La bola rebota en techo y suelo sin salir del campo.
-- [ ] Golpear la bola con el extremo superior de la pala la devuelve hacia arriba, con el centro sale casi horizontal y con el extremo inferior hacia abajo; el ángulo no supera 55°.
-- [ ] Cada golpe de pala aumenta la velocidad de la bola un 4 % y nunca supera 900 px/s.
-- [ ] A velocidad máxima la bola no atraviesa ninguna pala (sub-pasos).
-- [ ] La primera devolución del jugador en un rally suma 10, la segunda 20, y a partir de la décima suma 100 por golpe.
-- [ ] Pulsar `Espacio` hasta 0.15 s antes del contacto produce `¡POTENTE!`, acelera la bola ×1.3 y suma el doble de puntos de ese golpe; pulsarlo antes de esa ventana no tiene efecto.
-- [ ] Un gol del jugador suma 500; el segundo seguido 1 000; a partir del quinto seguido 2 500; aparece `RACHA ×N` desde el segundo.
-- [ ] Un gol de la CPU resta una vida, no resta puntos y reinicia la racha (el siguiente gol del jugador vuelve a valer 500).
-- [ ] Tras cada punto se muestra `¡PUNTO!` o `PUNTO CPU` durante 1 s y la bola se saca sola hacia quien concedió el punto.
-- [ ] El nivel sube a 2 tras 2 goles del jugador, a 3 tras 4, y no pasa de 10; en cada nivel la CPU y el saque son más rápidos.
-- [ ] La CPU falla algunas bolas en nivel 1 (error de puntería visible) y solo se mueve hacia la bola cuando esta va hacia ella.
-- [ ] Con la tercera vida perdida, el estado pasa a `over`, se dibuja `GAME OVER` con la puntuación final y `onStats` (estado final) se llama antes de `onGameOver`.
-- [ ] `onGameOver` se llama exactamente una vez por partida, también con `end()`; `end()` tras el fin no hace nada.
-- [ ] `onStats` no se llama en frames sin cambios (comprobable con un `console.log` temporal que se elimina).
-- [ ] `P` y `togglePause()` pausan y reanudan desde el mismo punto en `serve` y `playing`, emiten `onPauseChange` y muestran `PAUSA`; no tienen efecto en `ready` ni en `over`.
-- [ ] Tras una pausa larga o con la pestaña en segundo plano, la bola no salta (`dt` limitado a 0.05 s).
-- [ ] Mantener `↑` al pausar no deja la pala moviéndose al reanudar.
-- [ ] `Enter` en `over` y `restart()` inician una partida limpia en `ready` con `onStats({ score: 0, lives: 3, level: 1 })`; `Enter` fuera de `over` no hace nada.
-- [ ] `↑`, `↓`, `Espacio` y `Enter` no hacen scroll de la página mientras el engine está activo.
+- [X] `npm run build` termina sin errores.
+- [X] `npm run lint` termina sin errores nuevos.
+- [X] `lib/paddle-duel/engine.ts` exporta `createPaddleDuel`, `PaddleDuelStats`, `PaddleDuelCallbacks` y `PaddleDuelController` con las firmas de la sección 2.
+- [X] El módulo no tiene variables de estado a nivel de módulo (solo constantes) ni imports de React.
+- [X] Al crear el controlador se dibuja el campo 800 × 600 en `ready` con el overlay `ESPACIO PARA SACAR` y la bola quieta; `onStats` se llama con `{ score: 0, lives: 3, level: 1 }`.
+- [X] En `ready`, `↑`/`↓` y `W`/`S` mueven la pala del jugador.
+- [X] `Espacio` en `ready` saca la bola hacia la CPU.
+- [X] `↑` y `W` suben la pala, `↓` y `S` la bajan, y la pala nunca sale del campo.
+- [X] La bola rebota en techo y suelo sin salir del campo.
+- [X] Golpear la bola con el extremo superior de la pala la devuelve hacia arriba, con el centro sale casi horizontal y con el extremo inferior hacia abajo; el ángulo no supera 55°.
+- [X] Cada golpe de pala aumenta la velocidad de la bola un 4 % y nunca supera 900 px/s.
+- [X] A velocidad máxima la bola no atraviesa ninguna pala (sub-pasos).
+- [X] La primera devolución del jugador en un rally suma 10, la segunda 20, y a partir de la décima suma 100 por golpe.
+- [X] Pulsar `Espacio` hasta 0.15 s antes del contacto produce `¡POTENTE!`, acelera la bola ×1.3 y suma el doble de puntos de ese golpe; pulsarlo antes de esa ventana no tiene efecto.
+- [X] Un gol del jugador suma 500; el segundo seguido 1 000; a partir del quinto seguido 2 500; aparece `RACHA ×N` desde el segundo.
+- [X] Un gol de la CPU resta una vida, no resta puntos y reinicia la racha (el siguiente gol del jugador vuelve a valer 500).
+- [X] Tras cada punto se muestra `¡PUNTO!` o `PUNTO CPU` durante 1 s y la bola se saca sola hacia quien concedió el punto.
+- [X] El nivel sube a 2 tras 2 goles del jugador, a 3 tras 4, y no pasa de 10; en cada nivel la CPU y el saque son más rápidos.
+- [X] La CPU falla algunas bolas en nivel 1 (error de puntería visible) y solo se mueve hacia la bola cuando esta va hacia ella.
+- [X] Con la tercera vida perdida, el estado pasa a `over`, se dibuja `GAME OVER` con la puntuación final y `onStats` (estado final) se llama antes de `onGameOver`.
+- [X] `onGameOver` se llama exactamente una vez por partida, también con `end()`; `end()` tras el fin no hace nada.
+- [X] `onStats` no se llama en frames sin cambios (comprobable con un `console.log` temporal que se elimina).
+- [X] `P` y `togglePause()` pausan y reanudan desde el mismo punto en `serve` y `playing`, emiten `onPauseChange` y muestran `PAUSA`; no tienen efecto en `ready` ni en `over`.
+- [X] Tras una pausa larga o con la pestaña en segundo plano, la bola no salta (`dt` limitado a 0.05 s).
+- [X] Mantener `↑` al pausar no deja la pala moviéndose al reanudar.
+- [X] `Enter` en `over` y `restart()` inician una partida limpia en `ready` con `onStats({ score: 0, lives: 3, level: 1 })`; `Enter` fuera de `over` no hace nada.
+- [X] `↑`, `↓`, `Espacio` y `Enter` no hacen scroll de la página mientras el engine está activo.
 - [ ] `destroy()` detiene el bucle y los listeners; llamarlo dos veces no lanza error y después no se llama ningún callback.
-- [ ] La puntuación se suma solo con `addScore`, que la limita a 1 000 000 (comprobable forzando temporalmente una suma grande, cambio que se elimina).
-- [ ] El canvas no dibuja puntuación, vidas ni nivel.
-- [ ] `git status` solo muestra `lib/paddle-duel/engine.ts` como cambio de este spec; no queda el montaje temporal.
+- [X] La puntuación se suma solo con `addScore`, que la limita a 1 000 000 (comprobable forzando temporalmente una suma grande, cambio que se elimina).
+- [X] El canvas no dibuja puntuación, vidas ni nivel.
+- [X] `git status` solo muestra `lib/paddle-duel/engine.ts` como cambio de este spec; no queda el montaje temporal.
 
 ---
 
