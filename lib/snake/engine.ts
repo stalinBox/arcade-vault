@@ -4,6 +4,7 @@ import {
   type ColorMode,
   type SkinId,
 } from "@/lib/skins";
+import { createGameLoop, type GameLoop } from "@/lib/game-loop";
 import { SKIN_PALETTES, type Palette } from "./skins";
 import { FRUIT_SPRITES, FRUITS_SHEET_URL, type FruitName } from "./sprites";
 
@@ -367,8 +368,7 @@ export function createSnake(
   let finished = false;
   let destroyed = false;
   let acc = 0;
-  let last: number | null = null;
-  let rafId = 0;
+  let loop: GameLoop | null = null;
   let reported: string | null = null;
   let sheet: HTMLImageElement | null = null;
   let palette: Palette = SKIN_PALETTES[skin][mode];
@@ -392,12 +392,10 @@ export function createSnake(
     callbacks.onGameOver({ score: scoreOf(state), level: levelOf(state) });
   }
 
-  function frame(now: number): void {
-    if (destroyed) return;
-    rafId = requestAnimationFrame(frame);
-    if (last === null) last = now;
-    const elapsed = Math.min(now - last, MAX_FRAME_MS);
-    last = now;
+  // Returns false to put the loop to sleep (paused or match over).
+  function frame(_now: number, dt: number): boolean {
+    if (destroyed) return false;
+    const elapsed = Math.min(dt, MAX_FRAME_MS);
 
     if (!paused && state.status === "playing") {
       acc += elapsed;
@@ -412,10 +410,11 @@ export function createSnake(
     }
 
     drawBoard(ctx!, state, paused, sheet, palette);
+    return !paused && !finished;
   }
 
   function startLoop(): void {
-    if (!destroyed) rafId = requestAnimationFrame(frame);
+    if (!destroyed) loop = createGameLoop(frame);
   }
 
   // The loop starts once fruits.png has loaded or failed; a failure draws the fallback circle.
@@ -440,6 +439,7 @@ export function createSnake(
       acc = 0;
     }
     callbacks.onPauseChange(paused);
+    loop?.wake();
   }
 
   function end(): void {
@@ -447,6 +447,7 @@ export function createSnake(
     if (state.status === "ready" || state.status === "playing")
       state.status = "lost";
     finish();
+    loop?.wake();
   }
 
   function restart(): void {
@@ -455,9 +456,9 @@ export function createSnake(
     paused = false;
     finished = false;
     acc = 0;
-    last = null;
     reported = null;
     emitStats();
+    loop?.wake();
   }
 
   function onKeyDown(e: KeyboardEvent): void {
@@ -467,6 +468,7 @@ export function createSnake(
     if (dir) {
       e.preventDefault();
       queueDirection(state, dir);
+      loop?.wake();
       return;
     }
     if (e.key === " ") {
@@ -492,11 +494,12 @@ export function createSnake(
     restart,
     setSkin(nextSkin, nextMode) {
       palette = SKIN_PALETTES[nextSkin][nextMode];
+      loop?.wake();
     },
     destroy(): void {
       if (destroyed) return;
       destroyed = true;
-      cancelAnimationFrame(rafId);
+      loop?.destroy();
       window.removeEventListener("keydown", onKeyDown);
     },
   };

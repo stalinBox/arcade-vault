@@ -1,3 +1,4 @@
+import { createGameLoop, type GameLoop } from "@/lib/game-loop";
 import {
   SKIN_PALETTES,
   type Palette,
@@ -115,8 +116,7 @@ export function createPaddleDuel(
   let smashTrail = false; // trail follows the ball from a smash until the next hit
   let trail: { x: number; y: number }[] = []; // previous ball positions, newest first
 
-  let rafId = 0;
-  let lastTime: number | null = null;
+  let loop: GameLoop | null = null;
   let destroyed = false;
   let gameOverSent = false;
   let reported: PaddleDuelStats | null = null; // last stats sent to onStats
@@ -145,13 +145,14 @@ export function createPaddleDuel(
     if (destroyed || gameOverSent) return;
     gameOverSent = true;
     callbacks.onGameOver({ score, level });
+    loop?.wake();
   }
 
   function setPaused(value: boolean): void {
     if (paused === value) return;
     paused = value;
-    lastTime = null; // no time jump on resume
     callbacks.onPauseChange(paused);
+    loop?.wake();
   }
 
   function addScore(n: number): void {
@@ -400,17 +401,16 @@ export function createPaddleDuel(
     }
   }
 
-  function frame(now: number): void {
-    if (destroyed) return;
-    rafId = requestAnimationFrame(frame);
-
-    const dt = Math.min((now - (lastTime ?? now)) / 1000, MAX_DT);
-    lastTime = now;
+  // Returns false to put the loop to sleep: paused, or match over once the
+  // score popups have faded. 'ready' and 'serve' keep running.
+  function frame(_now: number, dtMs: number): boolean {
+    if (destroyed) return false;
     if (!paused) {
-      update(dt);
+      update(Math.min(dtMs / 1000, MAX_DT));
       emitStats();
     }
     draw();
+    return !paused && !(status === "over" && popups.length === 0);
   }
 
   function togglePause(): void {
@@ -454,6 +454,7 @@ export function createPaddleDuel(
     gameOverSent = false;
     reported = null;
     emitStats();
+    loop?.wake();
   }
 
   function onKeyDown(e: KeyboardEvent): void {
@@ -480,7 +481,7 @@ export function createPaddleDuel(
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("keyup", onKeyUp);
   emitStats();
-  rafId = requestAnimationFrame(frame);
+  loop = createGameLoop(frame);
 
   return {
     togglePause,
@@ -488,11 +489,12 @@ export function createPaddleDuel(
     restart,
     setSkin(skin, mode): void {
       palette = SKIN_PALETTES[skin][mode];
+      loop?.wake();
     },
     destroy(): void {
       if (destroyed) return;
       destroyed = true;
-      cancelAnimationFrame(rafId);
+      loop?.destroy();
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     },

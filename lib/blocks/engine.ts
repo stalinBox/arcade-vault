@@ -1,3 +1,4 @@
+import { createGameLoop, type GameLoop } from "@/lib/game-loop";
 // Port of references/started-games/03-claude-tetris/game.js.
 // Same rules as the reference; drawn into a fixed 800x600 canvas (scaled by CSS).
 
@@ -159,6 +160,7 @@ export function createBlocks(
   let dropInterval = START_INTERVAL;
   let dropAccum = 0;
   let destroyed = false;
+  let loop: GameLoop | null = null;
 
   // Every score change goes through here: never above MAX_SCORE.
   function addScore(points: number) {
@@ -266,13 +268,14 @@ export function createBlocks(
     over = true;
     emitStats(); // final stats reach React before onGameOver
     callbacks.onGameOver({ score, level });
+    loop?.wake();
   }
 
   function setPaused(value: boolean) {
     if (paused === value) return;
     paused = value;
-    lastTime = null; // next dt is 0, no jump after resuming
     callbacks.onPauseChange(paused);
+    loop?.wake();
   }
 
   function togglePause() {
@@ -288,12 +291,12 @@ export function createBlocks(
     over = false;
     dropInterval = START_INTERVAL;
     dropAccum = 0;
-    lastTime = null;
     lastStats = null;
     setPaused(false);
     next = randomPiece();
     spawn();
     emitStats();
+    loop?.wake();
   }
 
   // Input: one action per keydown (OS autorepeat included), as in the reference.
@@ -430,9 +433,6 @@ export function createBlocks(
   }
 
   // Main loop: never steps the game after game over (the reference does).
-  let lastTime: number | null = null;
-  let rafId = 0;
-
   function update(dt: number) {
     if (over || paused) return;
     dropAccum += dt;
@@ -444,16 +444,16 @@ export function createBlocks(
     }
   }
 
-  function loop(ts: number) {
-    const dt = lastTime === null ? 0 : Math.min(ts - lastTime, MAX_DT);
-    lastTime = ts;
-    update(dt);
+  // Returns false to put the loop to sleep (paused or game over).
+  function frame(_now: number, dt: number): boolean {
+    if (destroyed) return false;
+    update(Math.min(dt, MAX_DT));
     draw();
-    rafId = requestAnimationFrame(loop);
+    return !over && !paused;
   }
 
   initGame();
-  rafId = requestAnimationFrame(loop);
+  loop = createGameLoop(frame);
 
   return {
     togglePause,
@@ -468,7 +468,7 @@ export function createBlocks(
     destroy() {
       if (destroyed) return;
       destroyed = true;
-      cancelAnimationFrame(rafId);
+      loop?.destroy();
       window.removeEventListener("keydown", onKeyDown);
     },
   };
