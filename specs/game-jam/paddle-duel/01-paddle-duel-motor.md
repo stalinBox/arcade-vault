@@ -1,6 +1,6 @@
 # SPEC GJ-01 — DUELO PALA: motor del juego en `lib/paddle-duel/engine.ts`
 
-**Estado:** Borrador
+**Estado:** APPROVED
 **Fecha:** 2026-11-12
 **Depende de:** SPEC 01 (marco `.crt`, escalado `.crt-screen canvas`), SPEC 04 (base del proyecto), SPEC 05 (patrón de engine + player), SPEC 07 (rango de `scores.score` 0–1 000 000), SPEC 09 (física de paleta y bola con sub-pasos, `specs/09-rompebloques-jugable.md`), SPEC 10 (último patrón de engine, `specs/10-snake-jugable.md`)
 **Fuente de referencia:** Sin referencia: diseño propio.

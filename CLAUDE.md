@@ -30,6 +30,7 @@ Skills live in `.agents/skills/` and are symlinked into `.claude/skills/`. `skil
 - `/frontend-design` — usa siempre esta skill para diseñar una interfaz de usuario.
 - `/spec <idea>` — designs a spec through questions and writes `specs/NN-slug.md` in state `Borrador`. Never writes code.
 - `/spec-impl <NN-slug>` — implements a spec whose state is `Aprobado`: creates branch `spec-NN-slug` (`AutoCreateBranch` in `specs/.spec-config.yml`), goes step by step with pauses, never commits on its own.
+- `/spec-impl-game <NN-slug>` — same flow as `/spec-impl` (reads and follows its SKILL.md) for a game spec; after the last step it launches the `skin-designer` agent on the game. Never commits.
 - `/add-game <slug | reference folder | idea>` — `/spec` specialised for one new game with its leaderboard. Uses `.agents/skills/add-game/template.md`. Only writes the spec.
 
 ## Agents
