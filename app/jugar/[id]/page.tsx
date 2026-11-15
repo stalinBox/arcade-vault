@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense, type ComponentType } from "react";
 import { AsteroidsPlayer } from "@/components/asteroids-player";
 import { BlocksPlayer } from "@/components/blocks-player";
+import { PaddleDuelPlayer } from "@/components/paddle-duel-player";
 import { RompebloquesPlayer } from "@/components/rompebloques-player";
 import { SnakePlayer } from "@/components/snake-player";
 import { CrtScreen } from "@/components/crt-screen";
@@ -16,6 +17,7 @@ export async function generateStaticParams() {
 const GAME_PLAYERS: Record<string, ComponentType> = {
   asteroids: AsteroidsPlayer,
   blocks: BlocksPlayer,
+  "paddle-duel": PaddleDuelPlayer,
   rompebloques: RompebloquesPlayer,
   snake: SnakePlayer,
 };

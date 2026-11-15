@@ -1,3 +1,9 @@
+import {
+  SKIN_PALETTES,
+  type Palette,
+} from "@/lib/paddle-duel/skins";
+import type { ColorMode, SkinId } from "@/lib/skins";
+
 export interface PaddleDuelStats {
   score: number;
   lives: number; // 3..0
@@ -15,6 +21,7 @@ export interface PaddleDuelController {
   end(): void; // forces 'over' and fires onGameOver (FIN button); no effect if already over
   restart(): void; // clean match back in 'ready'
   destroy(): void; // cancels rAF and listeners; idempotent
+  setSkin(skin: SkinId, mode: ColorMode): void; // swaps the palette; the match is untouched
 }
 
 const WIDTH = 800;
@@ -47,17 +54,8 @@ const cpuAimError = (level: number) => Math.max(8, 48 - 4 * (level - 1));
 const clamp = (v: number, min: number, max: number) =>
   Math.min(max, Math.max(min, v));
 
-const COLOR_BG = "#05050f";
-const COLOR_LINE = "rgba(255, 255, 255, 0.25)";
-const COLOR_PLAYER = "#00f5ff";
-const COLOR_CPU = "#ff006e";
-const COLOR_BALL = "#f5ff00";
-const COLOR_TEXT = "#ffffff";
-const COLOR_VEIL = "rgba(0, 0, 0, 0.6)";
 const FONT = (px: number) => `${px}px "Press Start 2P", monospace`;
-const GLOW = 12;
 const DASH = 12;
-const LINE_W = 2;
 
 type Status = "ready" | "serve" | "playing" | "over";
 
@@ -80,6 +78,7 @@ function ignoresKeys(target: EventTarget | null): boolean {
 export function createPaddleDuel(
   canvas: HTMLCanvasElement,
   callbacks: PaddleDuelCallbacks,
+  options: { skin?: SkinId; mode?: ColorMode } = {},
 ): PaddleDuelController {
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("PaddleDuel: 2D canvas context unavailable");
@@ -96,6 +95,8 @@ export function createPaddleDuel(
     speed: 0,
   };
   const keys = new Set<string>();
+  let palette: Palette =
+    SKIN_PALETTES[options.skin ?? "classic"][options.mode ?? "dark"];
 
   let status: Status = "ready";
   let paused = false;
@@ -184,8 +185,8 @@ export function createPaddleDuel(
       streak += 1;
       const points = 500 * Math.min(streak, 5);
       addScore(points);
-      addPopup(`+${points}`, WIDTH / 2, 260, COLOR_PLAYER);
-      if (streak >= 2) addPopup(`RACHA ×${streak}`, WIDTH / 2, 220, COLOR_BALL);
+      addPopup(`+${points}`, WIDTH / 2, 260, palette.playerText);
+      if (streak >= 2) addPopup(`RACHA ×${streak}`, WIDTH / 2, 220, palette.accentText);
       level = Math.min(MAX_LEVEL, 1 + Math.floor(playerGoals / 2));
       serveDir = 1;
     } else {
@@ -227,8 +228,8 @@ export function createPaddleDuel(
     addScore(points);
     const popupX = PLAYER_X + PADDLE_W + 40;
     const popupY = player.y + PADDLE_H / 2;
-    addPopup(`+${points}`, popupX, popupY, COLOR_PLAYER);
-    if (smash) addPopup("¡POTENTE!", popupX, popupY - 24, COLOR_BALL);
+    addPopup(`+${points}`, popupX, popupY, palette.playerText);
+    if (smash) addPopup("¡POTENTE!", popupX, popupY - 24, palette.accentText);
     bounceOffPaddle(player.y, 1, smash);
   }
 
@@ -307,26 +308,26 @@ export function createPaddleDuel(
 
   function draw(): void {
     const c = ctx!;
-    c.fillStyle = COLOR_BG;
+    c.fillStyle = palette.board;
     c.fillRect(0, 0, WIDTH, HEIGHT);
 
-    c.fillStyle = COLOR_LINE;
+    c.fillStyle = palette.line;
     for (let y = 0; y < HEIGHT; y += DASH * 2) {
-      c.fillRect((WIDTH - LINE_W) / 2, y, LINE_W, DASH);
+      c.fillRect((WIDTH - palette.lineWidth) / 2, y, palette.lineWidth, DASH);
     }
 
-    c.shadowBlur = GLOW;
-    c.shadowColor = COLOR_PLAYER;
-    c.fillStyle = COLOR_PLAYER;
+    c.shadowBlur = palette.glow;
+    c.shadowColor = palette.player;
+    c.fillStyle = palette.player;
     c.fillRect(PLAYER_X, player.y, PADDLE_W, PADDLE_H);
 
-    c.shadowColor = COLOR_CPU;
-    c.fillStyle = COLOR_CPU;
+    c.shadowColor = palette.cpu;
+    c.fillStyle = palette.cpu;
     c.fillRect(CPU_X, cpu.y, PADDLE_W, PADDLE_H);
 
     if (status === "ready" || status === "playing") {
-      c.shadowColor = COLOR_BALL;
-      c.fillStyle = COLOR_BALL;
+      c.shadowColor = palette.ball;
+      c.fillStyle = palette.ball;
       trail.forEach((t, i) => {
         c.globalAlpha = 0.5 * (1 - i / TRAIL_LENGTH);
         c.fillRect(t.x, t.y, BALL_SIZE, BALL_SIZE);
@@ -362,7 +363,7 @@ export function createPaddleDuel(
   }
 
   function drawVeil(): void {
-    ctx!.fillStyle = COLOR_VEIL;
+    ctx!.fillStyle = palette.veil;
     ctx!.fillRect(0, 0, WIDTH, HEIGHT);
   }
 
@@ -371,15 +372,15 @@ export function createPaddleDuel(
     const cy = HEIGHT / 2;
     if (paused) {
       drawVeil();
-      drawText("PAUSA", cx, cy, COLOR_TEXT, 16);
+      drawText("PAUSA", cx, cy, palette.text, 16);
     } else if (status === "ready") {
-      drawText("DUELO PALA", cx, cy - 80, COLOR_PLAYER, 16);
-      drawText("ESPACIO PARA SACAR", cx, cy + 60, COLOR_TEXT, 16);
+      drawText("DUELO PALA", cx, cy - 80, palette.playerText, 16);
+      drawText("ESPACIO PARA SACAR", cx, cy + 60, palette.text, 16);
       drawText(
         "↑ ↓ / W S MOVER · ESPACIO GOLPE POTENTE",
         cx,
         cy + 100,
-        COLOR_TEXT,
+        palette.text,
         10,
       );
     } else if (status === "serve") {
@@ -388,14 +389,14 @@ export function createPaddleDuel(
         playerScored ? "¡PUNTO!" : "PUNTO CPU",
         cx,
         cy,
-        playerScored ? COLOR_PLAYER : COLOR_CPU,
+        playerScored ? palette.playerText : palette.cpuText,
         16,
       );
     } else if (status === "over") {
       drawVeil();
-      drawText("GAME OVER", cx, cy - 40, COLOR_CPU, 16);
-      drawText(`PUNTUACIÓN ${score}`, cx, cy, COLOR_TEXT, 16);
-      drawText("ENTER PARA REINICIAR", cx, cy + 40, COLOR_TEXT, 16);
+      drawText("GAME OVER", cx, cy - 40, palette.cpuText, 16);
+      drawText(`PUNTUACIÓN ${score}`, cx, cy, palette.text, 16);
+      drawText("ENTER PARA REINICIAR", cx, cy + 40, palette.text, 16);
     }
   }
 
@@ -485,6 +486,9 @@ export function createPaddleDuel(
     togglePause,
     end,
     restart,
+    setSkin(skin, mode): void {
+      palette = SKIN_PALETTES[skin][mode];
+    },
     destroy(): void {
       if (destroyed) return;
       destroyed = true;
