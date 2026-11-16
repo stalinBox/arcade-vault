@@ -2,9 +2,14 @@
 
 import Link from "next/link";
 import { useRef, type MouseEvent } from "react";
-import type { Game } from "@/lib/games";
+import type { Game } from "@/lib/games-types";
 
-const BTN_COLOR: Record<Game["color"], string> = { cyan: "", green: "", magenta: "magenta", yellow: "yellow" };
+const BTN_COLOR: Record<Game["color"], string> = {
+  cyan: "",
+  green: "",
+  magenta: "magenta",
+  yellow: "yellow",
+};
 
 export function GameCard({ game }: { game: Game }) {
   const tiltRef = useRef<HTMLAnchorElement>(null);
@@ -23,7 +28,13 @@ export function GameCard({ game }: { game: Game }) {
 
   // The whole card is the link; JUGAR is a visual cue only (no nested interactive element).
   return (
-    <Link ref={tiltRef} href={`/juego/${game.id}`} className="card" onMouseMove={onMove} onMouseLeave={onLeave}>
+    <Link
+      ref={tiltRef}
+      href={`/juego/${game.id}`}
+      className="card"
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+    >
       <div className="cover">
         <div className={"cover-bg " + game.cover}></div>
         <div className="label">{game.cat}</div>
@@ -36,7 +47,12 @@ export function GameCard({ game }: { game: Game }) {
             <span>MEJOR PUNTUACIÓN</span>
             <b>{game.best.toLocaleString("es-ES")}</b>
           </div>
-          <span className={("btn " + BTN_COLOR[game.color]).trim()} aria-hidden="true">JUGAR</span>
+          <span
+            className={("btn " + BTN_COLOR[game.color]).trim()}
+            aria-hidden="true"
+          >
+            JUGAR
+          </span>
         </div>
       </div>
     </Link>

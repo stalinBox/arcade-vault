@@ -1041,6 +1041,7 @@ body:has(.av-player) .av-nav { backdrop-filter: none; }
   transition: border-color 140ms, box-shadow 140ms;
 }
 .field input:focus { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,245,255,0.35); }
+.field-hint { margin: 0; font-family: var(--mono); font-size: 11px; line-height: 1.5; color: var(--ink-faint); }
 .auth-divider {
   display: flex; align-items: center; gap: 12px;
   margin: 16px 0;

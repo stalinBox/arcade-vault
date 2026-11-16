@@ -1,6 +1,6 @@
 # SPEC 12 — Autenticación: registro, login, OAuth y sesión en la nav
 
-**Estado:** APPROVED
+**Estado:** IMPLEMENTED
 **Fecha:** 2026-11-15
 **Depende de:** SPEC 01 (pantalla `/auth` visual, `components/auth-form.tsx`), SPEC 04 (clientes `lib/supabase/*`, `proxy.ts`), SPEC 07 (`scores`, `components/score-form.tsx`).
 **Fuente de referencia:** guía "Server-Side Auth for Next.js" de Supabase (`@supabase/ssr`), `node_modules/next/dist/docs/01-app/02-guides/authentication.md` y `authentication-with-cache-components.md`.
