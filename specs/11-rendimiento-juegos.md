@@ -1,6 +1,6 @@
 # SPEC 11 — Rendimiento de los juegos: bucle compartido, reposo real y CSS barato en `/jugar/*`
 
-**Estado:** APPROVED
+**Estado:** IMPLEMENTED
 **Fecha:** 2026-11-15
 **Depende de:** SPEC 05 (asteroids), SPEC 08 (blocks), SPEC 09 (rompebloques), SPEC 10 (snake), `specs/game-jam/paddle-duel/02-paddle-duel-plataforma.md` (paddle-duel). Patrón de engine + player y skins (`lib/skins.ts`).
 **Fuente de referencia:** Ninguna. Diagnóstico propio sobre el código actual.
