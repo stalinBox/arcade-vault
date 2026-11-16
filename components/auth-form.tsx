@@ -1,8 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
-import { signIn, signUp, type AuthState } from "@/app/auth/actions";
+import { useActionState, useState, useTransition } from "react";
+import {
+  signIn,
+  signInWithOAuth,
+  signUp,
+  type AuthState,
+  type OAuthProvider,
+} from "@/app/auth/actions";
 
 type Tab = "in" | "up";
 
@@ -20,6 +26,16 @@ export function AuthForm({ next, error }: { next: string; error?: string }) {
   const [email, setEmail] = useState("");
   const [inState, inAction, inPending] = useActionState(signIn, IDLE);
   const [upState, upAction, upPending] = useActionState(signUp, IDLE);
+  const [oauthError, setOauthError] = useState<string>();
+  const [oauthPending, startTransition] = useTransition();
+
+  const startOAuth = (provider: OAuthProvider) =>
+    startTransition(async () => {
+      setOauthError(undefined);
+      // Si va bien, la acción redirige al proveedor y no vuelve aquí.
+      const result = await signInWithOAuth(provider, next);
+      if (result.status === "error") setOauthError(result.message);
+    });
 
   const state = tab === "in" ? inState : upState;
   const pending = tab === "in" ? inPending : upPending;
@@ -174,13 +190,28 @@ export function AuthForm({ next, error }: { next: string; error?: string }) {
 
       <div className="auth-divider">O CONTINÚA CON</div>
       <div className="social">
-        <button className="btn ghost" type="button">
+        <button
+          className="btn ghost"
+          type="button"
+          disabled={oauthPending}
+          onClick={() => startOAuth("google")}
+        >
           ◆ GOOGLE
         </button>
-        <button className="btn ghost" type="button">
+        <button
+          className="btn ghost"
+          type="button"
+          disabled={oauthPending}
+          onClick={() => startOAuth("github")}
+        >
           ▣ GITHUB
         </button>
       </div>
+      {oauthError && (
+        <p className="contact-error" role="alert" style={{ marginTop: 12 }}>
+          {oauthError}
+        </p>
+      )}
 
       <div
         style={{

@@ -117,6 +117,33 @@ export async function signIn(
   redirect(safeNext(field(formData, "next")));
 }
 
+export type OAuthProvider = "google" | "github";
+
+// Inicio de sesión / registro con Google o GitHub. Redirige al proveedor;
+// a la vuelta, /auth/callback canjea el código y redirige a `next`.
+export async function signInWithOAuth(
+  provider: OAuthProvider,
+  next: string,
+): Promise<AuthState> {
+  if (provider !== "google" && provider !== "github")
+    return fail(GENERIC_ERROR);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: `${await getOrigin()}/auth/callback?next=${encodeURIComponent(safeNext(next))}`,
+    },
+  });
+  if (error || !data.url) {
+    return fail(
+      "No se pudo conectar con el proveedor. Prueba con correo y contraseña.",
+    );
+  }
+
+  redirect(data.url);
+}
+
 // Cierre de sesión desde la nav.
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
