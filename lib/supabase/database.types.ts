@@ -97,6 +97,7 @@ export type Database = {
           id: number
           player_name: string
           score: number
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -104,6 +105,7 @@ export type Database = {
           id?: never
           player_name: string
           score: number
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -111,6 +113,7 @@ export type Database = {
           id?: never
           player_name?: string
           score?: number
+          user_id?: string | null
         }
         Relationships: [
           {
