@@ -41,6 +41,7 @@ Subagents live in `.claude/agents/`.
   - Invoke as `@game-planner` or via the Agent tool; a new agent file is only registered after restarting the session.
   - Parallel runs (e.g. one per category): tell each to NOT write files, then consolidate `suggestions.md`, `MEMORY.md` and the To-Do once. Concurrent writes to the shared memory collide.
 - `skin-designer` — audits and implements per-game skins `classic` (default) / `neon` / `retro`, legible in dark and light mode (global `data-theme` toggle). Modes: `audit` (read-only), `<slug>`, `all`, `theme`. Writes code; never commits. Contract (`lib/skins.ts`, `lib/<slug>/skins.ts`, `setSkin` on the controller) lives in `.claude/agents/skin-designer.md`.
+- `game-performance-booster` — audits and fixes one game's runtime performance by id against SPEC 11 (`lib/game-loop.ts`, idle sleep, `wake()` on state change, `body:has(.av-player)` CSS) plus safe per-frame draw-cost fixes. Modes: `<game-id>`, `audit <game-id>` (read-only). Writes code; never commits.
 
 ## Spec-driven workflow
 
