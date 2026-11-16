@@ -25,7 +25,7 @@ There is no test runner configured. No test command exists to run a single test.
 
 ## Skills
 
-Skills live in `.agents/skills/` and are symlinked into `.claude/skills/`. `skills-lock.json` pins the ones installed with `npx skills`.
+Skills live in `.agents/skills/` and are symlinked into `.claude/skills/`. `skills-lock.json` pins the ones installed with `npx skills` (`frontend-design`, `spec`, `spec-impl`); `add-game` and `spec-impl-game` are local to this repo.
 
 - `/frontend-design` — usa siempre esta skill para diseñar una interfaz de usuario.
 - `/spec <idea>` — designs a spec through questions and writes `specs/NN-slug.md` in state `Borrador`. Never writes code.
@@ -35,17 +35,16 @@ Skills live in `.agents/skills/` and are symlinked into `.claude/skills/`. `skil
 
 ## Agents
 
-Subagents live in `.claude/agents/`.
+Subagents live in `.claude/agents/`. Read the agent file for modes, contract and rules. A new agent file only registers after restarting the session.
 
-- `game-planner` — plans and decides which new game fits the platform (proposes only, never writes specs or code). Persistent memory in `.claude/agent-memory/game-planner/` (`memory: project`, versioned); keeps the human To-Do `references/games-suggestions-todo.md` updated. Next step after a proposal: `/add-game <slug>`.
-  - Invoke as `@game-planner` or via the Agent tool; a new agent file is only registered after restarting the session.
-  - Parallel runs (e.g. one per category): tell each to NOT write files, then consolidate `suggestions.md`, `MEMORY.md` and the To-Do once. Concurrent writes to the shared memory collide.
-- `skin-designer` — audits and implements per-game skins `classic` (default) / `neon` / `retro`, legible in dark and light mode (global `data-theme` toggle). Modes: `audit` (read-only), `<slug>`, `all`, `theme`. Writes code; never commits. Contract (`lib/skins.ts`, `lib/<slug>/skins.ts`, `setSkin` on the controller) lives in `.claude/agents/skin-designer.md`.
-- `game-performance-booster` — audits and fixes one game's runtime performance by id against SPEC 11 (`lib/game-loop.ts`, idle sleep, `wake()` on state change, `body:has(.av-player)` CSS) plus safe per-frame draw-cost fixes. Modes: `<game-id>`, `audit <game-id>` (read-only). Writes code; never commits.
+- `game-planner` — proposes which game to add next; never writes specs or code. → `.claude/agents/game-planner.md`
+- `game-jam` — topic → one original game plus ≥2 specs in `specs/game-jam/<id>/`; never writes code. → `.claude/agents/game-jam.md`
+- `skin-designer` — audits/implements `classic` / `neon` / `retro` skins in dark and light mode. → `.claude/agents/skin-designer.md`
+- `game-performance-booster` — audits/fixes one game's runtime performance against SPEC 11. → `.claude/agents/game-performance-booster.md`
 
 ## Spec-driven workflow
 
-Every feature starts as a spec in `specs/` (Spanish, header `**Estado:**` / `**Fecha:**` / `**Depende de:**` / `**Objetivo:**`). The human moves the state from `Borrador` to `Aprobado`; after the acceptance criteria pass it becomes `IMPLEMENTED`. One branch and one PR per spec. Specs 01–10 are implemented; read the latest game spec before touching the game pattern.
+Every feature starts as a spec in `specs/` (Spanish, header `**Estado:**` / `**Fecha:**` / `**Depende de:**` / `**Objetivo:**`). The human moves the state from `Borrador` to `Aprobado`; after the acceptance criteria pass it becomes `IMPLEMENTED`. One branch and one PR per spec. Specs 01–10 and `specs/game-jam/paddle-duel/` (GJ-01, GJ-02) are implemented; SPEC 11 is merged but still marked `APPROVED`. `specs/game-jam/<id>/` holds specs written by the `game-jam` agent. Read the latest game spec (GJ-02) before touching the game pattern.
 
 ## Architecture
 
@@ -76,15 +75,15 @@ Pages are thin: a sync default export renders `<Suspense>` around an async loade
 
 ### Game pattern
 
-Four playable games: `asteroids`, `blocks`, `rompebloques`, `snake`. Each one has the same pieces:
+Five playable games: `asteroids`, `blocks`, `paddle-duel`, `rompebloques`, `snake`. Each one has the same pieces (exception: `blocks` has no skins yet — no `skins.ts`, no `SkinPicker`):
 
-1. `lib/<slug>/engine.ts` — no global DOM access. `create<Game>(canvas, callbacks, { skin, mode }?)` returns a controller (`togglePause`, `restart`, `end`, `destroy`, `setSkin(skin, mode)`). `setSkin` swaps the palette in place without touching the match. State lives in the closure, not in module variables. No color literals: every color comes from the active palette. Callbacks: `onStats`, `onGameOver`, `onPauseChange`. Optional `sprites.ts` for sprite atlases.
+1. `lib/<slug>/engine.ts` — no global DOM access. Drives frames with `createGameLoop` from `lib/game-loop.ts` (SPEC 11: sleeps when idle, `wake()` on state change). `create<Game>(canvas, callbacks, { skin, mode }?)` returns a controller (`togglePause`, `restart`, `end`, `destroy`, `setSkin(skin, mode)`). `setSkin` swaps the palette in place without touching the match. State lives in the closure, not in module variables. No color literals: every color comes from the active palette. Callbacks: `onStats`, `onGameOver`, `onPauseChange`. Optional `sprites.ts` for sprite atlases.
 2. `lib/<slug>/skins.ts` — `Palette` type and `SKIN_PALETTES: Record<SkinId, Record<ColorMode, Palette>>` for skins `classic` (default, the original look) / `neon` / `retro`, each in `dark` and `light`. Shared types and hooks (`useSkin(gameId)`, `useColorMode()`, `SKINS`) live in `lib/skins.ts`. Contract and contrast rules: `.claude/agents/skin-designer.md`.
 3. `components/<slug>-player.tsx` — client component: platform HUD (`.player-hud`) with `<SkinPicker>` (`components/skin-picker.tsx`, persisted in `av:skin:<slug>`), canvas inside `.crt.crt-game`, and `ScoreForm` when the match ends with `score > 0`. Calls `game.setSkin(skin, mode)` when skin or color mode changes. `destroy()` on unmount clears rAF and listeners.
 4. A migration that inserts the row in `games` (`on conflict (id) do nothing`). No new tables.
 5. `.cover-<slug>` in `app/globals.css` (base, `::before`, `::after`), pure CSS cover art.
 6. An entry in `GAME_PLAYERS` in `app/jugar/[id]/page.tsx`.
-7. Assets in `public/games/<slug>/`.
+7. Assets, if any, in `public/games/<slug>/`.
 
 Library, detail, hall of fame and landing read `games`/`scores`, so a new game shows up there with no extra code.
 
