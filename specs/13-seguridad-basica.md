@@ -1,6 +1,6 @@
 # SPEC 13 — Seguridad básica: RLS endurecido, función expuesta, Auth y cabeceras HTTP
 
-**Estado:** APPROVED
+**Estado:** IMPLEMENTED
 **Fecha:** 2026-11-15
 **Depende de:** SPEC 04 (Supabase, `next.config.ts`), SPEC 07 (`scores`, RLS), SPEC 12 (Auth, dashboard).
 **Fuente de referencia:** `references/security/security-checklist.md`, advisors de seguridad de Supabase, guía `headers` en `node_modules/next/dist/docs/`.
