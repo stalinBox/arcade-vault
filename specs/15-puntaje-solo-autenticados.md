@@ -1,6 +1,6 @@
 # SPEC 15 — Puntaje solo para usuarios autenticados
 
-**Estado:** APPROVED
+**Estado:** IMPLEMENTED
 **Fecha:** 2026-11-16
 **Depende de:** SPEC 07 (`scores`, `components/score-form.tsx`), SPEC 12 (Auth, `profiles`, `useCurrentUser`), SPEC 13 (política de insert de `scores`).
 
