@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useCurrentUser } from "@/lib/auth-client";
 import { saveScore } from "@/lib/scores-client";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -9,9 +10,12 @@ type SaveStatus = "idle" | "saving" | "saved" | "error";
 // Se desmonta al reiniciar (result vuelve a null): cada partida se guarda una sola vez.
 export function ScoreForm({ gameId, score }: { gameId: string; score: number }) {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const user = useCurrentUser();
+  // null = sin tocar: se muestra el usuario con sesión (prellenado, editable).
+  const [edited, setEdited] = useState<string | null>(null);
   const [status, setStatus] = useState<SaveStatus>("idle");
 
+  const name = edited ?? user?.username ?? "";
   const trimmed = name.trim();
   const valid = trimmed.length >= 1 && trimmed.length <= 12;
 
@@ -61,7 +65,7 @@ export function ScoreForm({ gameId, score }: { gameId: string; score: number }) 
           maxLength={12}
           autoComplete="off"
           disabled={status === "saving"}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => setEdited(e.target.value)}
           onKeyDown={stopKeys}
           onKeyUp={stopKeys}
           placeholder="Hasta 12 caracteres"

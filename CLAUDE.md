@@ -52,15 +52,16 @@ Arcade Vault is a retro game portal: players play canvas games as guests and sav
 
 ### Routes (`app/`)
 
-| Route         | Content                                                                                                                                          |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/inicio`     | Landing: catalog, latest scores, top scores                                                                                                      |
-| `/biblioteca` | Game library with category filter (see `references/implemented-games.md`) when you need to check which games are implemented and add more games. |
-| `/juego/[id]` | Game detail + top 10                                                                                                                             |
-| `/jugar/[id]` | Player. `GAME_PLAYERS` maps `id → component`; ids without an entry show a static CRT placeholder                                                 |
-| `/salon`      | Hall of fame, top 12 per game                                                                                                                    |
-| `/acerca`     | About + contact form (server action `sendContact`, Resend)                                                                                       |
-| `/auth`       | Visual-only login/signup form. Real auth does not exist yet                                                                                      |
+| Route                             | Content                                                                                                                                                          |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/inicio`                         | Landing: catalog, latest scores, top scores                                                                                                                      |
+| `/biblioteca`                     | Game library with category filter (see `references/implemented-games.md`) when you need to check which games are implemented and add more games.                 |
+| `/juego/[id]`                     | Game detail + top 10                                                                                                                                             |
+| `/jugar/[id]`                     | Player. `GAME_PLAYERS` maps `id → component`; ids without an entry show a static CRT placeholder                                                                 |
+| `/salon`                          | Hall of fame, top 12 per game                                                                                                                                    |
+| `/acerca`                         | About + contact form (server action `sendContact`, Resend)                                                                                                       |
+| `/auth`                           | Login/signup (Supabase Auth: email+password with mandatory email confirmation, Google/GitHub OAuth). `?next=` return path; redirects to `/inicio` when signed in |
+| `/auth/confirm`, `/auth/callback` | Route handlers: email confirmation link (`verifyOtp`) and OAuth return (`exchangeCodeForSession`); both redirect to `safeNext(next)` or `/auth?error=…`          |
 
 `app/layout.tsx` wraps every page with `Nav` and `Footer` and loads the fonts (Press Start 2P, JetBrains Mono, Courier Prime).
 
@@ -69,6 +70,8 @@ Pages are thin: a sync default export renders `<Suspense>` around an async loade
 ### Data layer (Supabase)
 
 - Tables (`supabase/migrations/`): `games` (catalog row per game; `cat` ∈ `ARCADE | PUZZLE | SHOOTER | VERSUS`, `color` ∈ `cyan | magenta | green | yellow`, `cover` = CSS class) and `scores` (`game_id`, `player_name` 1–12 chars trimmed, `score` 0–1 000 000). RLS: public select on both, public insert on `scores`, no update or delete.
+- `profiles` (`id` → `auth.users`, `username` unique `^[a-z0-9_]{3,12}$`): one row per user, written only by the `security definer` trigger `handle_new_user` on `auth.users` (username from signup metadata, GitHub `user_name` or email local part, sanitized, numeric suffix on collision). RLS: public select, no client writes. `scores` has no `user_id` yet.
+- Auth: server actions in `app/auth/actions.ts` (`signUp`, `signIn`, `signInWithOAuth`); `safeNext()` in `lib/auth-redirect.ts` validates every redirect target (internal paths only). Client side, `useCurrentUser()` in `lib/auth-client.ts` (nav, `ScoreForm` prefill); sign-out runs in the browser client from `components/nav.tsx` so `onAuthStateChange` updates the nav. Supabase dashboard setup (redirect URLs, providers, confirm-signup template) is in SPEC 12 §3.
 - Three clients in `lib/supabase/`: `server.ts` (cookies, Server Components and actions), `client.ts` (browser), `static.ts` (no cookies, build-time only, used by `generateStaticParams`). `database.types.ts` is generated with `supabase gen types`; regenerate it after schema changes.
 - `proxy.ts` (Next 16 name for middleware) refreshes the Supabase session cookies. It does not protect or redirect routes.
 - `lib/games.ts` and `lib/scores.ts` are server-only reads (`getCatalog`, `getGame`, `getGameIds`, `getTopScores`, `getLatestScores`). Client components import types from `lib/games-types.ts` / `lib/scores-types.ts` and write through `saveScore` in `lib/scores-client.ts`.

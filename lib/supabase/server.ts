@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import type { Database } from "./database.types";
 
 export async function createClient() {
@@ -12,6 +13,9 @@ export async function createClient() {
     );
   }
 
+  // Con sesión, auth-js mira la caducidad con Date.now(): Cache Components lo
+  // rechaza al prerenderizar con cookies. connection() lo deja para la petición.
+  await connection();
   const cookieStore = await cookies();
 
   return createServerClient<Database>(url, key, {

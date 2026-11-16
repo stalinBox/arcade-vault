@@ -249,6 +249,8 @@ body:has(.av-player) .av-nav { backdrop-filter: none; }
 .av-nav .coin-counter { display: flex; align-items: center; gap: 8px; font-family: var(--pixel); font-size: 9px; color: var(--yellow); }
 .av-nav .coin-counter .coin { width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff8b0, #f5ff00 60%, #b0b800); box-shadow: 0 0 8px var(--yellow); }
 .av-nav .auth-btn { margin-left: 16px; }
+.av-nav .auth-user { margin-left: 16px; font-family: var(--pixel); font-size: 9px; letter-spacing: 0.1em; white-space: nowrap; }
+.av-nav .auth-out { margin-left: 10px; padding: 10px 14px; }
 .av-nav .hamburger { display: none; }
 .av-nav .theme-btn { padding: 10px 12px; gap: 8px; }
 .theme-glyph { font-family: system-ui, sans-serif; font-size: 13px; line-height: 1; }
@@ -266,6 +268,8 @@ body:has(.av-player) .av-nav { backdrop-filter: none; }
 @media (max-width: 480px) {
   .av-nav { gap: 12px; }
   .av-nav .auth-btn { margin-left: 0; }
+  .av-nav .auth-user { display: none; }
+  .av-nav .auth-out { margin-left: 0; }
 }
 
 .av-mobile-panel {
@@ -289,6 +293,7 @@ body:has(.av-player) .av-nav { backdrop-filter: none; }
   border-bottom: 1px dashed var(--line-2);
 }
 .av-mobile-panel a.active { color: var(--cyan); }
+.av-mobile-panel .panel-user { padding: 14px 12px; font-family: var(--pixel); font-size: 11px; border-bottom: 1px dashed var(--line-2); }
 .av-mobile-backdrop {
   position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 55;
   opacity: 0; pointer-events: none; transition: opacity 180ms;
