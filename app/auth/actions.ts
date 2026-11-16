@@ -144,9 +144,5 @@ export async function signInWithOAuth(
   redirect(data.url);
 }
 
-// Cierre de sesión desde la nav.
-export async function signOut(): Promise<void> {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect("/inicio");
-}
+// El cierre de sesión se hace en el navegador (components/nav.tsx) para que
+// onAuthStateChange actualice la nav al instante.

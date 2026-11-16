@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useCurrentUser } from "@/lib/auth-client";
 import { setColorMode, useColorMode } from "@/lib/skins";
+import { createClient } from "@/lib/supabase/client";
 
 /** Light/dark switch; the visible text states the current mode. */
 function ThemeToggle({ className }: { className: string }) {
@@ -43,9 +45,25 @@ function sectionOf(pathname: string): Section | null {
 
 export function Nav() {
   const [open, setOpen] = useState(false);
-  const section = sectionOf(usePathname());
+  const pathname = usePathname();
+  const router = useRouter();
+  const user = useCurrentUser();
+  const section = sectionOf(pathname);
   const active = (s: Section) => (section === s ? "active" : "");
   const close = () => setOpen(false);
+
+  // Vuelve aquí tras el login (salvo desde /auth, que ya redirige a /inicio).
+  const loginHref =
+    pathname === "/auth"
+      ? "/auth"
+      : `/auth?next=${encodeURIComponent(pathname)}`;
+
+  const signOut = async () => {
+    close();
+    await createClient().auth.signOut(); // dispara SIGNED_OUT → useCurrentUser
+    router.push("/inicio");
+    router.refresh();
+  };
 
   return (
     <>
@@ -76,9 +94,31 @@ export function Nav() {
           <span>CRÉDITOS · 03</span>
         </div>
         <ThemeToggle className="btn ghost theme-btn" />
-        <Link href="/auth" className="btn auth-btn">
-          Iniciar Sesión
-        </Link>
+        {user === undefined ? (
+          // Slot reservado mientras carga la sesión: sin parpadeo de estado.
+          <span
+            className="btn auth-btn"
+            style={{ visibility: "hidden" }}
+            aria-hidden="true"
+          >
+            Iniciar Sesión
+          </span>
+        ) : user ? (
+          <>
+            <span className="auth-user neon-cyan">@{user.username}</span>
+            <button
+              type="button"
+              className="btn ghost auth-out"
+              onClick={signOut}
+            >
+              SALIR
+            </button>
+          </>
+        ) : (
+          <Link href={loginHref} className="btn auth-btn">
+            Iniciar Sesión
+          </Link>
+        )}
         <button
           className="btn ghost hamburger"
           onClick={() => setOpen(true)}
@@ -121,9 +161,22 @@ export function Nav() {
         <Link href="/acerca" className={active("acerca")} onClick={close}>
           Acerca de
         </Link>
-        <Link href="/auth" className={active("auth")} onClick={close}>
-          Iniciar Sesión
-        </Link>
+        {user ? (
+          <>
+            <div className="panel-user neon-cyan">@{user.username}</div>
+            <button
+              type="button"
+              className="btn ghost theme-btn-panel"
+              onClick={signOut}
+            >
+              SALIR
+            </button>
+          </>
+        ) : user === null ? (
+          <Link href={loginHref} className={active("auth")} onClick={close}>
+            Iniciar Sesión
+          </Link>
+        ) : null}
         <ThemeToggle className="btn ghost theme-btn-panel" />
         <div style={{ flex: 1 }}></div>
         <div
