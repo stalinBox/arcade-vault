@@ -17,6 +17,7 @@ There is no test runner configured. No test command exists to run a single test.
 
 - `AGENTS.md` mandates reading the relevant guide in `node_modules/next/dist/docs/` before writing Next.js code. This is Next 16.4.x, which has breaking changes from earlier versions. Heed deprecation notices.
 - `next.config.ts` enables experimental/canary-style flags: `experimental.agentFeedback`, `cacheComponents`, `partialPrefetching`, and a custom Turbopack CSS rule that routes `*.css` through `@tailwindcss/turbopack`. It also redirects `/` to `/inicio` (there is no `app/page.tsx`). Check these against the Next docs before changing routing, caching, or styling setup.
+- `next.config.ts` `headers()` sends security headers on `/(.*)` (SPEC 13): `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy` (camera/mic/geolocation/topics off), `Strict-Transport-Security` (2 years, `includeSubDomains`, no `preload`). No CSP yet (the inline theme script needs nonces). Revisit `X-Frame-Options`/`Permissions-Policy` if a game needs iframes, fullscreen or gamepad.
 - `AGENTS.md` contains `BEGIN/END:nextjs-agent-rules` and `BEGIN/END:nextjs-agent-feedback` blocks that `next dev` rewrites. Keep them intact.
 - `next-env.d.ts` is generated and git-ignored; do not edit it.
 - Env vars live in `.env.local` (git-ignored); `.env.template` lists them: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `RESEND_API_KEY`, `CONTACT_TO_EMAIL` (optional `CONTACT_FROM_EMAIL`). Never use the `service_role` key.
@@ -41,6 +42,7 @@ Subagents live in `.claude/agents/`. Read the agent file for modes, contract and
 - `game-jam` — topic → one original game plus ≥2 specs in `specs/game-jam/<id>/`; never writes code. → `.claude/agents/game-jam.md`
 - `skin-designer` — audits/implements `classic` / `neon` / `retro` skins in dark and light mode. → `.claude/agents/skin-designer.md`
 - `game-performance-booster` — audits/fixes one game's runtime performance against SPEC 11. → `.claude/agents/game-performance-booster.md`
+- `security-auditor` — audits DB (RLS, policies, definer functions, advisors, drift, logs) and app (secrets, auth, proxy, headers, deps) against SPEC 12/13; fixes app code, only proposes migrations; records each audit in `references/security/audits/`. Modes `full | db | app | audit | diff`. → `.claude/agents/security-auditor.md`
 
 ## Spec-driven workflow
 
@@ -69,11 +71,12 @@ Pages are thin: a sync default export renders `<Suspense>` around an async loade
 
 ### Data layer (Supabase)
 
-- Tables (`supabase/migrations/`): `games` (catalog row per game; `cat` ∈ `ARCADE | PUZZLE | SHOOTER | VERSUS`, `color` ∈ `cyan | magenta | green | yellow`, `cover` = CSS class) and `scores` (`game_id`, `player_name` 1–12 chars trimmed, `score` 0–1 000 000). RLS: public select on both, public insert on `scores`, no update or delete.
+- Tables (`supabase/migrations/`): `games` (catalog row per game; `cat` ∈ `ARCADE | PUZZLE | SHOOTER | VERSUS`, `color` ∈ `cyan | magenta | green | yellow`, `cover` = CSS class) and `scores` (`game_id`, `player_name` 1–12 chars trimmed, `score` 0–1 000 000). RLS: public select on both, public insert on `scores` with an explicit check (`game_id` exists in `games`, trimmed name 1–12, score 0–1 000 000; SPEC 13), no update or delete. `public.rls_auto_enable()` (dashboard-created function of the event trigger `ensure_rls`, not in migrations) has EXECUTE revoked from `public`/`anon`/`authenticated`; re-check the security advisor if it is recreated.
 - `profiles` (`id` → `auth.users`, `username` unique `^[a-z0-9_]{3,12}$`): one row per user, written only by the `security definer` trigger `handle_new_user` on `auth.users` (username from signup metadata, GitHub `user_name` or email local part, sanitized, numeric suffix on collision). RLS: public select, no client writes. `scores` has no `user_id` yet.
 - Auth: server actions in `app/auth/actions.ts` (`signUp`, `signIn`, `signInWithOAuth`); `safeNext()` in `lib/auth-redirect.ts` validates every redirect target (internal paths only). Client side, `useCurrentUser()` in `lib/auth-client.ts` (nav, `ScoreForm` prefill); sign-out runs in the browser client from `components/nav.tsx` so `onAuthStateChange` updates the nav. Supabase dashboard setup (redirect URLs, providers, confirm-signup template) is in SPEC 12 §3.
 - Three clients in `lib/supabase/`: `server.ts` (cookies, Server Components and actions), `client.ts` (browser), `static.ts` (no cookies, build-time only, used by `generateStaticParams`). `database.types.ts` is generated with `supabase gen types`; regenerate it after schema changes.
-- `proxy.ts` (Next 16 name for middleware) refreshes the Supabase session cookies. It does not protect or redirect routes.
+- `proxy.ts` (Next 16 name for middleware) refreshes the Supabase session cookies and redirects signed-in users away from `/auth` (exact path) to `safeNext(next)`, carrying the refreshed cookies. `/auth/confirm` and `/auth/callback` are not redirected. Future routes that require login go there.
+- Sign-up password policy (SPEC 13): min 8 + lowercase, uppercase, digit and symbol, enforced in the Supabase dashboard and mirrored in `signUp` (`isStrongPassword` / `PASSWORD_MESSAGE` in `app/auth/actions.ts`, same symbol set as Supabase). Change both together. `signIn` does not check composition (old accounts still log in).
 - `lib/games.ts` and `lib/scores.ts` are server-only reads (`getCatalog`, `getGame`, `getGameIds`, `getTopScores`, `getLatestScores`). Client components import types from `lib/games-types.ts` / `lib/scores-types.ts` and write through `saveScore` in `lib/scores-client.ts`.
 
 ### Game pattern
@@ -98,5 +101,5 @@ Light/dark: `data-theme="dark" | "light"` on `<html>` (default `dark`, persisted
 
 ### Other directories
 
-- `references/` — read-only source material: `started-games/` (original JS games that were ported), `templates/` (the original visual design in JSX/CSS), `source-assets/`. Never modify it, except `games-suggestions-todo.md`, which the `game-planner` agent maintains.
+- `references/` — read-only source material: `started-games/` (original JS games that were ported), `templates/` (the original visual design in JSX/CSS), `source-assets/`. Never modify it, except `games-suggestions-todo.md`, which the `game-planner` agent maintains, and `security/audits/`, where the `security-auditor` agent writes its audit records.
 - `demos/` — scratch component, not used by the app.

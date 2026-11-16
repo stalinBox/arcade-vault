@@ -13,6 +13,19 @@ export type AuthState =
 const USERNAME_RE = /^[a-z0-9_]{3,12}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD = 8;
+// Mismo conjunto de símbolos que acepta Supabase Auth.
+const PASSWORD_RULES = [
+  /[a-z]/,
+  /[A-Z]/,
+  /[0-9]/,
+  /[!@#$%^&*()_+\-=[\]{};'\\:"|<>?,./`~]/,
+];
+const PASSWORD_MESSAGE =
+  "La contraseña debe tener al menos 8 caracteres, con minúsculas, mayúsculas, números y símbolos.";
+
+function isStrongPassword(p: string): boolean {
+  return p.length >= MIN_PASSWORD && PASSWORD_RULES.every((re) => re.test(p));
+}
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_credentials: "Correo o contraseña incorrectos.",
@@ -20,7 +33,7 @@ const ERROR_MESSAGES: Record<string, string> = {
     "Tu correo aún no está confirmado. Revisa tu bandeja de entrada.",
   user_already_exists: "Ese correo ya está registrado.",
   email_exists: "Ese correo ya está registrado.",
-  weak_password: `La contraseña debe tener al menos ${MIN_PASSWORD} caracteres.`,
+  weak_password: PASSWORD_MESSAGE,
   email_address_invalid: "El correo no es válido.",
   signup_disabled: "El registro está desactivado.",
   over_email_send_rate_limit:
@@ -66,10 +79,8 @@ export async function signUp(
     );
   }
   if (!EMAIL_RE.test(email)) return fail("El correo no es válido.");
-  if (typeof password !== "string" || password.length < MIN_PASSWORD) {
-    return fail(
-      `La contraseña debe tener al menos ${MIN_PASSWORD} caracteres.`,
-    );
+  if (typeof password !== "string" || !isStrongPassword(password)) {
+    return fail(PASSWORD_MESSAGE);
   }
 
   const supabase = await createClient();

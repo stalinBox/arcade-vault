@@ -156,7 +156,13 @@ export function AuthForm({ next, error }: { next: string; error?: string }) {
               autoComplete={tab === "in" ? "current-password" : "new-password"}
               placeholder="••••••••"
               required
+              aria-describedby={tab === "up" ? "auth-pass-hint" : undefined}
             />
+            {tab === "up" && (
+              <p id="auth-pass-hint" className="field-hint">
+                Mín. 8 caracteres: minúsculas, mayúsculas, números y símbolos.
+              </p>
+            )}
           </div>
 
           {message && (
