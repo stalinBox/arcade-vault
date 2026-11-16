@@ -1,6 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { safeNext } from "@/lib/auth-redirect";
 import { createClient } from "@/lib/supabase/server";
@@ -56,12 +55,15 @@ function field(formData: FormData, name: string): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-async function getOrigin(): Promise<string> {
-  const h = await headers();
-  const origin = h.get("origin");
-  if (origin) return origin;
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${h.get("host")}`;
+// El origen sale de una variable de entorno, no de los headers de la petición
+// (los controla el cliente: un Host falso envenenaría el enlace del correo).
+function getOrigin(): string {
+  const url = process.env.NEXT_PUBLIC_SITE_URL;
+  if (url) return url.replace(/\/+$/, "");
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Falta NEXT_PUBLIC_SITE_URL. Revisa .env.local.");
+  }
+  return "http://localhost:3000";
 }
 
 // Registro con usuario + email + contraseña. No inicia sesión: exige confirmar el correo.
@@ -98,7 +100,7 @@ export async function signUp(
     password,
     options: {
       data: { username },
-      emailRedirectTo: `${await getOrigin()}/auth/confirm`,
+      emailRedirectTo: `${getOrigin()}/auth/confirm`,
     },
   });
   if (error) return authError(error.code);
@@ -143,7 +145,7 @@ export async function signInWithOAuth(
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${await getOrigin()}/auth/callback?next=${encodeURIComponent(safeNext(next))}`,
+      redirectTo: `${getOrigin()}/auth/callback?next=${encodeURIComponent(safeNext(next))}`,
     },
   });
   if (error || !data.url) {
